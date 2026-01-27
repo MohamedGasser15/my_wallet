@@ -37,26 +37,23 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
   }
   
-  Future<void> _checkAuthStatus() async {
-    await SharedPrefs.init();
-    
-    // Simulate loading time
-    await Future.delayed(const Duration(seconds: 2));
-    
-    final isFirstTime = SharedPrefs.isFirstTime;
-    final token = SharedPrefs.authToken;
-    
-    if (isFirstTime) {
-      // Go to onboarding
-      _navigateToOnboarding();
-    } else if (token != null && token.isNotEmpty) {
-      // Go to home
-      _navigateToHome();
-    } else {
-      // Go to auth
-      _navigateToAuth();
-    }
+Future<void> _checkAuthStatus() async {
+  await SharedPrefs.init();
+
+  // Simulate loading time
+  await Future.delayed(const Duration(seconds: 2));
+
+  final token = SharedPrefs.authToken;
+
+  if (token == null || token.isEmpty) {
+    // ❗ مفيش تسجيل → Onboarding
+    _navigateToOnboarding();
+  } else {
+    // ✅ مسجل دخول
+    _navigateToHome();
   }
+}
+
   
   void _navigateToOnboarding() {
     Navigator.of(context).pushReplacement(
