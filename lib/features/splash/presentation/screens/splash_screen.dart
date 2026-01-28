@@ -1,11 +1,14 @@
-// features/splash/presentation/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:my_wallet/l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final Function(Locale) onLocaleChanged;
+  
+  const SplashScreen({super.key, required this.onLocaleChanged});
   
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -37,28 +40,29 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
   }
   
-Future<void> _checkAuthStatus() async {
-  await SharedPrefs.init();
+  Future<void> _checkAuthStatus() async {
+    await SharedPrefs.init();
 
-  // Simulate loading time
-  await Future.delayed(const Duration(seconds: 2));
+    // Simulate loading time
+    await Future.delayed(const Duration(seconds: 2));
 
-  final token = SharedPrefs.authToken;
+    final token = SharedPrefs.authToken;
 
-  if (token == null || token.isEmpty) {
-    // ❗ مفيش تسجيل → Onboarding
-    _navigateToOnboarding();
-  } else {
-    // ✅ مسجل دخول
-    _navigateToHome();
+    if (token == null || token.isEmpty) {
+      // ❗ مفيش تسجيل → Onboarding
+      _navigateToOnboarding();
+    } else {
+      // ✅ مسجل دخول
+      _navigateToHome();
+    }
   }
-}
-
   
   void _navigateToOnboarding() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => const OnboardingScreen(),
+        builder: (context) => OnboardingScreen(
+          onLocaleChanged: widget.onLocaleChanged,
+        ),
       ),
     );
   }
@@ -125,7 +129,8 @@ Future<void> _checkAuthStatus() async {
               
               // App Name
               Text(
-                'محفظتي',
+                context.l10n.appTitle,
+
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -135,7 +140,7 @@ Future<void> _checkAuthStatus() async {
               
               // Tagline
               Text(
-                'إدارة أموالك بسهولة',
+                context.l10n.manageYourMoneyEasily,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
                 ),

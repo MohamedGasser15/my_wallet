@@ -37,7 +37,6 @@ class _StoryProgressBarState extends State<StoryProgressBar>
   void didUpdateWidget(StoryProgressBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentPage != widget.currentPage) {
-      // إذا تغيرت الصفحة، أعد إنشاء الـ Animation
       _progressAnimation = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(
           parent: widget.progressController,
@@ -49,60 +48,65 @@ class _StoryProgressBarState extends State<StoryProgressBar>
   
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(widget.totalPages, (index) {
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => widget.onPageTap(index),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: List.generate(widget.totalPages, (index) {
+          return Expanded(
             child: Container(
-              margin: EdgeInsets.only(right: index == widget.totalPages - 1 ? 0 : 4),
-              height: 3,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Stack(
-                children: [
-                  // الخلفية الرمادية لجميع الأشرطة
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              child: GestureDetector(
+                onTap: () => widget.onPageTap(index),
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  
-                  // الصفحات المكتملة
-                  if (index < widget.currentPage)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(2),
+                  child: Stack(
+                    children: [
+                      // الخلفية الرمادية لجميع الأشرطة
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    ),
-                  
-                  // الصفحة الحالية مع الحركة السلسة
-                  if (index == widget.currentPage)
-                    AnimatedBuilder(
-                      animation: _progressAnimation,
-                      builder: (context, child) {
-                        return FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: _progressAnimation.value,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                      
+                      // الصفحات المكتملة
+                      if (index < widget.currentPage)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                        );
-                      },
-                    ),
-                ],
+                        ),
+                      
+                      // الصفحة الحالية مع الحركة السلسة
+                      if (index == widget.currentPage)
+                        AnimatedBuilder(
+                          animation: _progressAnimation,
+                          builder: (context, child) {
+                            return FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: _progressAnimation.value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

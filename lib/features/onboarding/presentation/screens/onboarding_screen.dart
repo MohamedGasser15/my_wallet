@@ -1,13 +1,15 @@
-// features/onboarding/presentation/screens/onboarding_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/onboarding_page.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/language_switch.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/story_progress_bar.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final Function(Locale) onLocaleChanged;
+  
+  const OnboardingScreen({super.key, required this.onLocaleChanged});
   
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -21,38 +23,42 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _currentPage = 0;
   bool _isAnimating = false;
   
-  final List<OnboardingPageData> _pages = [
-    OnboardingPageData(
-      title: 'مرحباً بك في محفظتي',
-      description: 'تطبيقك الشخصي لإدارة المصروفات والمدخرات بكل سهولة ومرونة',
-      icon: Icons.wallet,
-      imagePath: 'assets/images/onboarding_1.svg',
-    ),
-    OnboardingPageData(
-      title: 'تتبع كل حركة',
-      description: 'سجل جميع مصروفاتك وإيراداتك في مكان واحد مع تفاصيل كاملة',
-      icon: Icons.track_changes,
-      imagePath: 'assets/images/onboarding_2.svg',
-    ),
-    OnboardingPageData(
-      title: 'خطط لمستقبلك',
-      description: 'اضبط ميزانيتك وتابع تقدمك نحو أهدافك المالية',
-      icon: Icons.insights,
-      imagePath: 'assets/images/onboarding_3.svg',
-    ),
-    OnboardingPageData(
-      title: 'حافظ على مدخراتك',
-      description: 'تابع مدخراتك اليومية وشاهد تطورها مع الوقت',
-      icon: Icons.savings,
-      imagePath: 'assets/images/onboarding_4.svg',
-    ),
-    OnboardingPageData(
-      title: 'تحكم في نفقاتك',
-      description: 'احصل على تقارير دقيقة لنفقاتك وادخر بذكاء',
-      icon: Icons.bar_chart,
-      imagePath: 'assets/images/onboarding_5.svg',
-    ),
-  ];
+  List<OnboardingPageData> _getPages(BuildContext context) {
+    final l10n = context.l10n;
+    
+    return [
+      OnboardingPageData(
+        title: l10n.welcome,
+        description: l10n.welcomeDescription,
+        icon: Icons.wallet,
+        imagePath: 'assets/images/onboarding_1.svg',
+      ),
+      OnboardingPageData(
+        title: l10n.trackEveryMove,
+        description: l10n.trackDescription,
+        icon: Icons.track_changes,
+        imagePath: 'assets/images/onboarding_2.svg',
+      ),
+      OnboardingPageData(
+        title: l10n.planYourFuture,
+        description: l10n.planDescription,
+        icon: Icons.insights,
+        imagePath: 'assets/images/onboarding_3.svg',
+      ),
+      OnboardingPageData(
+        title: l10n.keepYourSavings,
+        description: l10n.keepDescription,
+        icon: Icons.savings,
+        imagePath: 'assets/images/onboarding_4.svg',
+      ),
+      OnboardingPageData(
+        title: l10n.controlYourExpenses,
+        description: l10n.controlDescription,
+        icon: Icons.bar_chart,
+        imagePath: 'assets/images/onboarding_5.svg',
+      ),
+    ];
+  }
   
   @override
   void initState() {
@@ -65,18 +71,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     
     _pageController.addListener(_onPageChanged);
     
-    // بدء التقدم التلقائي للصفحة الأولى
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startProgressForPage(_currentPage);
     });
   }
   
   void _startProgressForPage(int page) {
-    // إعادة ضبط المتحكم والتأكد من أنه متوقف
     _progressController.reset();
     _progressController.forward().then((_) {
-      // عند اكتمال الحركة، انتقل للصفحة التالية
-      if (page == _currentPage) { // تأكد أننا ما زلنا في نفس الصفحة
+      if (page == _currentPage) {
         _goToNextPageSmooth();
       }
     });
@@ -86,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (_isAnimating || !_pageController.hasClients) return;
     
     _isAnimating = true;
-    int nextPage = (_currentPage + 1) % _pages.length;
+    int nextPage = (_currentPage + 1) % _getPages(context).length;
     
     _pageController.animateToPage(
       nextPage,
@@ -97,7 +100,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         _currentPage = nextPage;
         _isAnimating = false;
       });
-      // بدء التقدم للصفحة الجديدة
       _startProgressForPage(_currentPage);
     });
   }
@@ -106,9 +108,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (_isAnimating || !_pageController.hasClients) return;
     
     _isAnimating = true;
-    int nextPage = (_currentPage + 1) % _pages.length;
+    int nextPage = (_currentPage + 1) % _getPages(context).length;
     
-    // توقف التقدم الحالي فوراً
     _progressController.stop();
     
     _pageController.animateToPage(
@@ -120,7 +121,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         _currentPage = nextPage;
         _isAnimating = false;
       });
-      // بدء التقدم للصفحة الجديدة
       _startProgressForPage(_currentPage);
     });
   }
@@ -131,7 +131,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _isAnimating = true;
     int prevPage = _currentPage - 1;
     
-    // توقف التقدم الحالي فوراً
     _progressController.stop();
     
     _pageController.animateToPage(
@@ -143,7 +142,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         _currentPage = prevPage;
         _isAnimating = false;
       });
-      // بدء التقدم للصفحة الجديدة
       _startProgressForPage(_currentPage);
     });
   }
@@ -156,7 +154,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       setState(() {
         _currentPage = newPage;
       });
-      // توقف وإعادة بدء التقدم للصفحة الجديدة
       _progressController.stop();
       _startProgressForPage(_currentPage);
     }
@@ -183,7 +180,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         _currentPage = index;
         _isAnimating = false;
       });
-      // بدء التقدم للصفحة الجديدة
       _startProgressForPage(_currentPage);
     });
   }
@@ -198,16 +194,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   
   @override
   Widget build(BuildContext context) {
+    final pages = _getPages(context);
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: LanguageSwitch(),
+            padding: const EdgeInsets.only(right: 16),
+            child: LanguageSwitch(onLocaleChanged: widget.onLocaleChanged),
           ),
         ],
       ),
@@ -218,7 +217,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: StoryProgressBar(
               currentPage: _currentPage,
-              totalPages: _pages.length,
+              totalPages: pages.length,
               progressController: _progressController,
               onPageTap: _handlePageTap,
             ),
@@ -231,37 +230,67 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 PageView.builder(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _pages.length,
+                  itemCount: pages.length,
                   itemBuilder: (context, index) {
-                    return OnboardingPageWidget(data: _pages[index]);
+                    return OnboardingPageWidget(data: pages[index]);
                   },
                 ),
                 
-                // Right side tap area
-                Positioned.fill(
-                  right: 0,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: _goToNextPage,
-                      child: Container(width: 100, color: Colors.transparent),
+                // Forward tap area (للصفحة التالية)
+                if (isRTL)
+                  // العربية: الضغط على اليسار يروح للصفحة الجديدة
+                  Positioned.fill(
+                    left: 0,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _goToNextPage,
+                        child: Container(width: 100, color: Colors.transparent),
+                      ),
+                    ),
+                  )
+                else
+                  // الإنجليزية: الضغط على اليمين يروح للصفحة الجديدة
+                  Positioned.fill(
+                    right: 0,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _goToNextPage,
+                        child: Container(width: 100, color: Colors.transparent),
+                      ),
                     ),
                   ),
-                ),
                 
-                // Left side tap area
-                Positioned.fill(
-                  left: 0,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: _goToPreviousPage,
-                      child: Container(width: 100, color: Colors.transparent),
+                // Backward tap area (للصفحة السابقة)
+                if (isRTL)
+                  // العربية: الضغط على اليمين يروح للصفحة السابقة
+                  Positioned.fill(
+                    right: 0,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _currentPage > 0 ? _goToPreviousPage : null,
+                        child: Container(width: 100, color: Colors.transparent),
+                      ),
+                    ),
+                  )
+                else
+                  // الإنجليزية: الضغط على اليسار يروح للصفحة السابقة
+                  Positioned.fill(
+                    left: 0,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _currentPage > 0 ? _goToPreviousPage : null,
+                        child: Container(width: 100, color: Colors.transparent),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -283,7 +312,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   elevation: 0,
                 ),
                 child: Text(
-                  'ابدأ',
+                  context.l10n.getStarted,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,

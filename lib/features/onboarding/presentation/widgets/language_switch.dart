@@ -1,15 +1,48 @@
-// features/onboarding/presentation/widgets/language_switch.dart
 import 'package:flutter/material.dart';
+import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/utils/language_service.dart';
+import 'package:my_wallet/l10n/app_localizations.dart';
 
 class LanguageSwitch extends StatefulWidget {
-  const LanguageSwitch({super.key});
+  final Function(Locale) onLocaleChanged;
+  
+  const LanguageSwitch({super.key, required this.onLocaleChanged});
   
   @override
   State<LanguageSwitch> createState() => _LanguageSwitchState();
 }
 
 class _LanguageSwitchState extends State<LanguageSwitch> {
-  bool _isEnglish = false;
+  late bool _isEnglish;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentLanguage();
+  }
+  
+  Future<void> _loadCurrentLanguage() async {
+    final locale = await LanguageService.getSavedLocale();
+    setState(() {
+      _isEnglish = LanguageService.isEnglish(locale);
+    });
+  }
+  
+  Future<void> _switchToArabic() async {
+    await LanguageService.switchToArabic();
+    setState(() {
+      _isEnglish = false;
+    });
+    widget.onLocaleChanged(LanguageService.arabic);
+  }
+  
+  Future<void> _switchToEnglish() async {
+    await LanguageService.switchToEnglish();
+    setState(() {
+      _isEnglish = true;
+    });
+    widget.onLocaleChanged(LanguageService.english);
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -26,12 +59,7 @@ class _LanguageSwitchState extends State<LanguageSwitch> {
         children: [
           // Arabic
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _isEnglish = false;
-              });
-              // TODO: Implement language change
-            },
+            onTap: _switchToArabic,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -41,7 +69,7 @@ class _LanguageSwitchState extends State<LanguageSwitch> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                'عربي',
+                context.l10n.arabic,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -55,12 +83,7 @@ class _LanguageSwitchState extends State<LanguageSwitch> {
           
           // English
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _isEnglish = true;
-              });
-              // TODO: Implement language change
-            },
+            onTap: _switchToEnglish,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -70,7 +93,7 @@ class _LanguageSwitchState extends State<LanguageSwitch> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                'English',
+                context.l10n.english,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
