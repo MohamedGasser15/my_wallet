@@ -505,6 +505,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Under Budget'**
   String get underBudget;
+
+  /// No description provided for @whatIsYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your email?'**
+  String get whatIsYourEmail;
+
+  /// No description provided for @enterYourEmailDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to create an account or log in again'**
+  String get enterYourEmailDescription;
+
+  /// No description provided for @lostAccessToEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost access to your email?'**
+  String get lostAccessToEmail;
+
+  /// No description provided for @continueText.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueText;
+
+  /// No description provided for @enterVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter verification code'**
+  String get enterVerificationCode;
+
+  /// No description provided for @verifyYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get verifyYourEmail;
+
+  /// No description provided for @enterCodeSentSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent in an SMS to'**
+  String get enterCodeSentSms;
+
+  /// No description provided for @enterCodeSentEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent in an email to'**
+  String get enterCodeSentEmail;
+
+  /// No description provided for @resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in'**
+  String get resendCodeIn;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get resendCode;
+
+  /// No description provided for @seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'seconds'**
+  String get seconds;
+
+  /// No description provided for @enterYourPasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your passcode'**
+  String get enterYourPasscode;
+
+  /// No description provided for @setPasscodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a passcode'**
+  String get setPasscodeTitle;
+
+  /// No description provided for @setPasscodeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a passcode for your account. You will be able to log in with this passcode.'**
+  String get setPasscodeDescription;
+
+  /// No description provided for @forgotPasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget?'**
+  String get forgotPasscode;
+
+  /// No description provided for @completeRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Registration'**
+  String get completeRegistration;
+
+  /// No description provided for @enterYourDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your details to complete your account'**
+  String get enterYourDetails;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fullName;
+
+  /// No description provided for @userName.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get userName;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get complete;
 }
 
 class _AppLocalizationsDelegate

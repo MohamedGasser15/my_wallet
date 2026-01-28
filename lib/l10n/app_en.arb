@@ -70,5 +70,35 @@
   "underBudget": "Under Budget",
   "english": "English",
     "arabic": "العربية",
-  "welcome": "Welcome"
+  "welcome": "Welcome",
+  "whatIsYourEmail": "What is your email?",
+  "enterYourEmailDescription": "Enter your email to create an account or log in again",
+  "lostAccessToEmail": "Lost access to your email?",
+  "continueText": "Continue",
+  "email": "Email",
+  "whatIsYourEmail": "What is your email?",
+  "enterYourEmailDescription": "Enter your email to create an account or log in again",
+  "lostAccessToEmail": "Lost access to your email?",
+  "continueText": "Continue",
+  "email": "Email",
+
+  "enterVerificationCode": "Enter verification code",
+  "verifyYourEmail": "Verify your email",
+  "enterCodeSentSms": "Enter the code we sent in an SMS to",
+  "enterCodeSentEmail": "Enter the code we sent in an email to",
+  "resendCodeIn": "Resend code in",
+  "resendCode": "Resend code",
+  "seconds": "seconds",
+
+  "enterYourPasscode": "Enter your passcode",
+  "setPasscodeTitle": "Set a passcode",
+  "setPasscodeDescription": "Set a passcode for your account. You will be able to log in with this passcode.",
+  "forgotPasscode": "Forget?",
+
+  "completeRegistration": "Complete Registration",
+  "enterYourDetails": "Enter your details to complete your account",
+  "fullName": "Full Name",
+  "userName": "Username",
+  "phoneNumber": "Phone Number",
+  "complete": "Complete"
 }

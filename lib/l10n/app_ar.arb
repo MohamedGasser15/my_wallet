@@ -67,5 +67,35 @@
   "spent": "مصروف",
   "left": "متبقي",
   "overBudget": "تجاوز الميزانية",
-  "underBudget": "داخل الميزانية"
+  "underBudget": "داخل الميزانية",
+  "whatIsYourEmail": "ما هو بريدك الإلكتروني؟",
+  "enterYourEmailDescription": "أدخل بريدك الإلكتروني لإنشاء حساب أو تسجيل الدخول مرة أخرى",
+  "lostAccessToEmail": "فقدت الوصول إلى بريدك الإلكتروني؟",
+  "continueText": "متابعة",
+  "email": "البريد الإلكتروني",
+  "whatIsYourEmail": "ما هو بريدك الإلكتروني؟",
+  "enterYourEmailDescription": "أدخل بريدك الإلكتروني لإنشاء حساب أو تسجيل الدخول مرة أخرى",
+  "lostAccessToEmail": "فقدت الوصول إلى بريدك الإلكتروني؟",
+  "continueText": "متابعة",
+  "email": "البريد الإلكتروني",
+
+  "enterVerificationCode": "أدخل رمز التحقق",
+  "verifyYourEmail": "تحقق من بريدك الإلكتروني",
+  "enterCodeSentSms": "أدخل الرمز الذي أرسلناه في رسالة نصية إلى",
+  "enterCodeSentEmail": "أدخل الرمز الذي أرسلناه في بريد إلكتروني إلى",
+  "resendCodeIn": "أعد إرسال الرمز خلال",
+  "resendCode": "أعد إرسال الرمز",
+  "seconds": "ثانية",
+
+  "enterYourPasscode": "أدخل رمز المرور",
+  "setPasscodeTitle": "تعيين رمز مرور",
+  "setPasscodeDescription": "قم بتعيين رمز مرور لحسابك. ستتمكن من تسجيل الدخول باستخدام هذا الرمز.",
+  "forgotPasscode": "نسيت؟",
+
+  "completeRegistration": "إكمال التسجيل",
+  "enterYourDetails": "أدخل بياناتك لإكمال حسابك",
+  "fullName": "الاسم الكامل",
+  "userName": "اسم المستخدم",
+  "phoneNumber": "رقم الهاتف",
+  "complete": "إكمال"
 }

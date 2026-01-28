@@ -4,6 +4,7 @@ import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:my_wallet/l10n/app_localizations.dart';
+import 'package:my_wallet/main.dart';
 
 class SplashScreen extends StatefulWidget {
   final Function(Locale) onLocaleChanged;
@@ -67,10 +68,15 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
   
-  void _navigateToHome() {
-    // TODO: Navigate to home screen
-    print('Navigate to home');
-  }
+void _navigateToHome() {
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(
+      builder: (context) => HomeScreen(
+      ),
+    ),
+  );
+}
+
   
   void _navigateToAuth() {
     // TODO: Navigate to auth screen

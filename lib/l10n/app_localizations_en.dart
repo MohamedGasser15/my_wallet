@@ -216,4 +216,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get underBudget => 'Under Budget';
+
+  @override
+  String get whatIsYourEmail => 'What is your email?';
+
+  @override
+  String get enterYourEmailDescription =>
+      'Enter your email to create an account or log in again';
+
+  @override
+  String get lostAccessToEmail => 'Lost access to your email?';
+
+  @override
+  String get continueText => 'Continue';
+
+  @override
+  String get enterVerificationCode => 'Enter verification code';
+
+  @override
+  String get verifyYourEmail => 'Verify your email';
+
+  @override
+  String get enterCodeSentSms => 'Enter the code we sent in an SMS to';
+
+  @override
+  String get enterCodeSentEmail => 'Enter the code we sent in an email to';
+
+  @override
+  String get resendCodeIn => 'Resend code in';
+
+  @override
+  String get resendCode => 'Resend code';
+
+  @override
+  String get seconds => 'seconds';
+
+  @override
+  String get enterYourPasscode => 'Enter your passcode';
+
+  @override
+  String get setPasscodeTitle => 'Set a passcode';
+
+  @override
+  String get setPasscodeDescription =>
+      'Set a passcode for your account. You will be able to log in with this passcode.';
+
+  @override
+  String get forgotPasscode => 'Forget?';
+
+  @override
+  String get completeRegistration => 'Complete Registration';
+
+  @override
+  String get enterYourDetails => 'Enter your details to complete your account';
+
+  @override
+  String get fullName => 'Full Name';
+
+  @override
+  String get userName => 'Username';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get complete => 'Complete';
 }

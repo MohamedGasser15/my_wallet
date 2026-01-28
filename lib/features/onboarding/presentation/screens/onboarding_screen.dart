@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
+import 'package:my_wallet/features/auth/presentation/screens/email_screen.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/onboarding_page.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/language_switch.dart';
 import 'package:my_wallet/features/onboarding/presentation/widgets/story_progress_bar.dart';
@@ -159,11 +160,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
-  Future<void> _onGetStarted() async {
-    await SharedPrefs.setFirstTime(false);
-    // TODO: Navigate to email screen
-    print('Navigate to email screen');
-  }
+Future<void> _onGetStarted() async {
+  await SharedPrefs.setFirstTime(false);
+  
+  Navigator.pushNamed(context, '/email');
+}
   
   void _handlePageTap(int index) {
     if (_isAnimating) return;

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_wallet/core/utils/language_service.dart';
 import 'package:my_wallet/core/themes/app_theme.dart';
+import 'package:my_wallet/core/utils/language_service.dart';
 import 'package:my_wallet/core/utils/navigation_service.dart';
+import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:my_wallet/features/splash/presentation/screens/splash_screen.dart';
 import 'package:my_wallet/l10n/app_localizations.dart';
+import 'package:my_wallet/features/auth/presentation/screens/email_screen.dart';
+import 'package:my_wallet/features/auth/presentation/screens/verification_screen.dart';
+import 'package:my_wallet/features/auth/presentation/screens/passcode_screen.dart';
+import 'package:my_wallet/features/auth/presentation/screens/register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +97,73 @@ class _MyWalletAppState extends State<MyWalletApp> {
           ),
         );
       },
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(
+              builder: (context) => SplashScreen(onLocaleChanged: _changeLocale),
+            );
+          case '/onboarding':
+            return MaterialPageRoute(
+              builder: (context) => OnboardingScreen(onLocaleChanged: _changeLocale),
+            );
+          case '/email':
+            return MaterialPageRoute(
+              builder: (context) => const EmailScreen(),
+            );
+          case '/verification':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => VerificationScreen(
+                email: args['email'],
+                isLogin: args['isLogin'],
+              ),
+            );
+          case '/passcode':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => PasscodeScreen(
+                email: args['email'],
+                verificationCode: args['verificationCode'],
+                isLogin: args['isLogin'],
+              ),
+            );
+          case '/register':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => RegisterScreen(
+                email: args['email'],
+                verificationCode: args['verificationCode'],
+                passcode: args['passcode'],
+              ),
+            );
+          case '/home':
+            return MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            );
+          default:
+            return MaterialPageRoute(
+              builder: (context) => SplashScreen(onLocaleChanged: _changeLocale),
+            );
+        }
+      },
+    );
+  }
+}
+
+// HomeScreen مؤقتة
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+      ),
+      body: const Center(
+        child: Text('Welcome to Home Screen'),
+      ),
     );
   }
 }

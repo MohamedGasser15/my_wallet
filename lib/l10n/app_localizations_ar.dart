@@ -213,4 +213,70 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get underBudget => 'داخل الميزانية';
+
+  @override
+  String get whatIsYourEmail => 'ما هو بريدك الإلكتروني؟';
+
+  @override
+  String get enterYourEmailDescription =>
+      'أدخل بريدك الإلكتروني لإنشاء حساب أو تسجيل الدخول مرة أخرى';
+
+  @override
+  String get lostAccessToEmail => 'فقدت الوصول إلى بريدك الإلكتروني؟';
+
+  @override
+  String get continueText => 'متابعة';
+
+  @override
+  String get enterVerificationCode => 'أدخل رمز التحقق';
+
+  @override
+  String get verifyYourEmail => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String get enterCodeSentSms => 'أدخل الرمز الذي أرسلناه في رسالة نصية إلى';
+
+  @override
+  String get enterCodeSentEmail =>
+      'أدخل الرمز الذي أرسلناه في بريد إلكتروني إلى';
+
+  @override
+  String get resendCodeIn => 'أعد إرسال الرمز خلال';
+
+  @override
+  String get resendCode => 'أعد إرسال الرمز';
+
+  @override
+  String get seconds => 'ثانية';
+
+  @override
+  String get enterYourPasscode => 'أدخل رمز المرور';
+
+  @override
+  String get setPasscodeTitle => 'تعيين رمز مرور';
+
+  @override
+  String get setPasscodeDescription =>
+      'قم بتعيين رمز مرور لحسابك. ستتمكن من تسجيل الدخول باستخدام هذا الرمز.';
+
+  @override
+  String get forgotPasscode => 'نسيت؟';
+
+  @override
+  String get completeRegistration => 'إكمال التسجيل';
+
+  @override
+  String get enterYourDetails => 'أدخل بياناتك لإكمال حسابك';
+
+  @override
+  String get fullName => 'الاسم الكامل';
+
+  @override
+  String get userName => 'اسم المستخدم';
+
+  @override
+  String get phoneNumber => 'رقم الهاتف';
+
+  @override
+  String get complete => 'إكمال';
 }
