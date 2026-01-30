@@ -84,30 +84,43 @@ class ApiService {
   }
   
   // Helper method to handle API responses
-  Map<String, dynamic> handleResponse(http.Response response) {
-    print('🔄 Handling response: ${response.statusCode}');
-    
-    try {
-      final responseBody = jsonDecode(response.body);
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return responseBody;
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized - Please login again');
-      } else if (response.statusCode == 400) {
-        final error = responseBody;
-        throw Exception(error['message'] ?? 'Bad request');
-      } else if (response.statusCode == 404) {
-        throw Exception('Endpoint not found');
-      } else if (response.statusCode == 500) {
-        throw Exception('Server error - Please try again later');
-      } else {
-        throw Exception('Failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('❌ Response parsing error: $e');
-      print('❌ Response body: ${response.body}');
-      throw Exception('Failed to parse response');
-    }
+Map<String, dynamic> handleResponse(http.Response response) {
+  print('🔄 Handling response: ${response.statusCode}');
+  
+  final statusCode = response.statusCode;
+  final body = response.body;
+
+  // لو الفويس بتاع السيرفر فاضي
+  if (body.isEmpty) {
+    return {
+      'success': false,
+      'message': 'Empty response from server',
+    };
   }
+
+  try {
+    // حاول نفك JSON
+    final decoded = jsonDecode(body);
+
+    if (decoded is Map<String, dynamic>) {
+      return {
+        'success': decoded['success'] ?? (statusCode == 200),
+        'message': decoded['message'] ?? '',
+        ...decoded,
+      };
+    }
+
+    // لو decoded مش Map (مثلاً String) => نعتبره رسالة خطأ
+    return {
+      'success': false,
+      'message': decoded.toString(),
+    };
+  } catch (e) {
+    // JSON غير صالح => نستخدم النص كما هو
+    return {
+      'success': false,
+      'message': body,
+    };
+  }
+}
 }

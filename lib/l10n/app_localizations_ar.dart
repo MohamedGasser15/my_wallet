@@ -244,7 +244,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resendCodeIn => 'أعد إرسال الرمز خلال';
 
   @override
-  String get resendCode => 'أعد إرسال الرمز';
+  String get resendCode => 'أعد إرسال الرمز مجددا';
 
   @override
   String get seconds => 'ثانية';
@@ -279,4 +279,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get complete => 'إكمال';
+
+  @override
+  String get invalidVerificationCode => 'رمز التحقق غير صحيح';
+
+  @override
+  String get verifyCodeFailed => 'فشل التحقق من رمز التحقق';
 }

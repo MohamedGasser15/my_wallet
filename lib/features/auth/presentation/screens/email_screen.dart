@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
-import 'package:my_wallet/features/auth/presentation/screens/verification_screen.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class EmailScreen extends StatefulWidget {
@@ -12,7 +12,7 @@ class EmailScreen extends StatefulWidget {
   State<EmailScreen> createState() => _EmailScreenState();
 }
 
-class _EmailScreenState extends State<EmailScreen> {
+class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
   final AuthRepository _authRepository = AuthRepository();
@@ -21,10 +21,67 @@ class _EmailScreenState extends State<EmailScreen> {
   bool _isLoading = false;
   bool _emailExists = false;
   
+  // Wave loading animation variables
+  late AnimationController _waveController;
+  late Animation<double> _waveAnimation;
+  final List<double> _dotScales = [1.0, 1.0, 1.0];
+  final List<double> _dotOpacities = [0.5, 0.5, 0.5];
+  
   @override
   void initState() {
     super.initState();
     _emailController.addListener(_validateEmail);
+    
+    // Initialize wave animation controller
+    _waveController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    
+    _waveAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _waveController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+  
+  void _startWaveAnimation() {
+    _waveController.repeat(reverse: true);
+    
+    Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      if (!mounted || !_isLoading) {
+        timer.cancel();
+        return;
+      }
+      
+      setState(() {
+        // Create wave effect for 3 dots
+        final time = DateTime.now().millisecondsSinceEpoch / 500;
+        
+        for (int i = 0; i < 3; i++) {
+          double phase = i * 0.8;
+          double waveValue = sin(time - phase);
+          
+          // Normalize to [0.5, 1.0] range for opacity
+          _dotOpacities[i] = 0.5 + ((waveValue + 1) / 2) * 0.5;
+          
+          // Normalize to [0.8, 1.2] range for scale
+          _dotScales[i] = 0.8 + ((waveValue + 1) / 2) * 0.4;
+        }
+      });
+    });
+  }
+  
+  void _stopWaveAnimation() {
+    _waveController.stop();
+    setState(() {
+      // Reset dots to normal state
+      for (int i = 0; i < 3; i++) {
+        _dotScales[i] = 1.0;
+        _dotOpacities[i] = 0.5;
+      }
+    });
   }
   
   void _validateEmail() {
@@ -36,61 +93,65 @@ class _EmailScreenState extends State<EmailScreen> {
     });
   }
   
-Future<void> _checkEmail() async {
-  if (!_isEmailValid) return;
-  
-  setState(() {
-    _isLoading = true;
-  });
-  
-  try {
-    final email = _emailController.text.trim();
-    final exists = await _authRepository.checkEmail(email);
+  Future<void> _checkEmail() async {
+    if (!_isEmailValid) return;
     
     setState(() {
-      _emailExists = exists;
+      _isLoading = true;
     });
     
-    // إرسال كود التحقق
-     _sendVerificationCode();
+    // Start wave animation
+    _startWaveAnimation();
     
-    // إظهار رسالة نجاح
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Verification code sent to $email'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  } catch (e) {
-    _showErrorSnackbar('Error: ${e.toString()}');
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      final email = _emailController.text.trim();
+      final exists = await _authRepository.checkEmail(email);
+      
+      setState(() {
+        _emailExists = exists;
+      });
+      
+      // إرسال كود التحقق
+      await _sendVerificationCode();
+      
+      // إظهار رسالة نجاح
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Verification code sent to $email'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      _showErrorSnackbar('Error: ${e.toString()}');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+      _stopWaveAnimation();
+    }
   }
-}
   
-void _sendVerificationCode() async {
-  try {
-    final email = _emailController.text.trim();
-    final isLogin = _emailExists;
-    
-    await _authRepository.sendVerification(email, isLogin);
-    
-    // الانتقال لشاشة التحقق
-    Navigator.pushNamed(
-      context,
-      '/verification',
-      arguments: {
-        'email': email,
-        'isLogin': isLogin,
-      },
-    );
-  } catch (e) {
-    _showErrorSnackbar('Failed to send verification code');
+  Future<void> _sendVerificationCode() async {
+    try {
+      final email = _emailController.text.trim();
+      final isLogin = _emailExists;
+      
+      await _authRepository.sendVerification(email, isLogin);
+      
+      // الانتقال لشاشة التحقق
+      Navigator.pushNamed(
+        context,
+        '/verification',
+        arguments: {
+          'email': email,
+          'isLogin': isLogin,
+        },
+      );
+    } catch (e) {
+      _showErrorSnackbar('Failed to send verification code');
+    }
   }
-}
   
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -119,6 +180,7 @@ void _sendVerificationCode() async {
   void dispose() {
     _emailController.dispose();
     _emailFocusNode.dispose();
+    _waveController.dispose();
     super.dispose();
   }
   
@@ -248,9 +310,10 @@ void _sendVerificationCode() async {
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
+                      ),
                     ),
                   ),
-                  ),
+                  
                   // Spacer
                   const SizedBox(height: 80),
                 ],
@@ -258,7 +321,7 @@ void _sendVerificationCode() async {
             ),
           ),
           
-          // Continue Button
+          // Continue Button with Wave Loading
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             width: double.infinity,
@@ -276,12 +339,24 @@ void _sendVerificationCode() async {
                 elevation: 0,
               ),
               child: _isLoading
-                  ? const SizedBox(
-                      width: 24,
+                  ? SizedBox(
+                      width: 60,
                       height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(3, (index) {
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: 8 * _dotScales[index],
+                            height: 8 * _dotScales[index],
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.onPrimary
+                                  .withOpacity(_dotOpacities[index]),
+                              shape: BoxShape.circle,
+                            ),
+                          );
+                        }),
                       ),
                     )
                   : Text(

@@ -246,7 +246,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resendCodeIn => 'Resend code in';
 
   @override
-  String get resendCode => 'Resend code';
+  String get resendCode => 'Resend code again';
 
   @override
   String get seconds => 'seconds';
@@ -281,4 +281,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get complete => 'Complete';
+
+  @override
+  String get invalidVerificationCode => 'Invalid verification code';
+
+  @override
+  String get verifyCodeFailed => 'Failed to verify the code';
 }

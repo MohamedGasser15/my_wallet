@@ -87,7 +87,7 @@
   "enterCodeSentSms": "Enter the code we sent in an SMS to",
   "enterCodeSentEmail": "Enter the code we sent in an email to",
   "resendCodeIn": "Resend code in",
-  "resendCode": "Resend code",
+  "resendCode": "Resend code again",
   "seconds": "seconds",
 
   "enterYourPasscode": "Enter your passcode",
@@ -100,5 +100,7 @@
   "fullName": "Full Name",
   "userName": "Username",
   "phoneNumber": "Phone Number",
-  "complete": "Complete"
+  "complete": "Complete",
+  "invalidVerificationCode": "Invalid verification code",
+  "verifyCodeFailed": "Failed to verify the code"
 }

@@ -563,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @resendCode.
   ///
   /// In en, this message translates to:
-  /// **'Resend code'**
+  /// **'Resend code again'**
   String get resendCode;
 
   /// No description provided for @seconds.
@@ -631,6 +631,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete'**
   String get complete;
+
+  /// No description provided for @invalidVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code'**
+  String get invalidVerificationCode;
+
+  /// No description provided for @verifyCodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to verify the code'**
+  String get verifyCodeFailed;
 }
 
 class _AppLocalizationsDelegate

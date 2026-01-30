@@ -84,7 +84,7 @@
   "enterCodeSentSms": "أدخل الرمز الذي أرسلناه في رسالة نصية إلى",
   "enterCodeSentEmail": "أدخل الرمز الذي أرسلناه في بريد إلكتروني إلى",
   "resendCodeIn": "أعد إرسال الرمز خلال",
-  "resendCode": "أعد إرسال الرمز",
+  "resendCode": "أعد إرسال الرمز مجددا",
   "seconds": "ثانية",
 
   "enterYourPasscode": "أدخل رمز المرور",
@@ -97,5 +97,7 @@
   "fullName": "الاسم الكامل",
   "userName": "اسم المستخدم",
   "phoneNumber": "رقم الهاتف",
-  "complete": "إكمال"
+  "complete": "إكمال",
+  "invalidVerificationCode": "رمز التحقق غير صحيح",
+  "verifyCodeFailed": "فشل التحقق من رمز التحقق"
 }
