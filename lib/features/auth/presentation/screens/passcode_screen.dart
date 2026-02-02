@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 
@@ -228,45 +229,56 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
   }
   
   Future<void> _completeProcess() async {
-    setState(() {
-      _isLoading = true;
-      _isSubmitting = true;
-    });
-    
-    // Start wave animation
-    _startWaveAnimation();
-    
-    String passcode = _passcode.join();
-    
-    try {
-      if (widget.isLogin) {
-        final result = await _authRepository.completeLogin(
-          email: widget.email,
-          verificationCode: widget.verificationCode,
-          password: passcode,
-        );
-        
-        if (result['success'] == true) {
-          // Show success state for 2 seconds
-          _showSuccessState();
-        } else {
-          _showErrorState();
-        }
+  setState(() {
+    _isLoading = true;
+    _isSubmitting = true;
+  });
+
+  // Start wave animation
+  _startWaveAnimation();
+
+  String passcode = _passcode.join();
+
+  try {
+    if (widget.isLogin) {
+      final result = await _authRepository.completeLogin(
+        email: widget.email,
+        verificationCode: widget.verificationCode,
+        password: passcode,
+      );
+
+      if (result['success'] == true) {
+        // Save passcode locally
+        await SharedPrefs.setString('user_password', passcode);
+
+        // Show success state for 2 seconds
+        _showSuccessState();
       } else {
-        Navigator.pushNamed(
-          context,
-          '/register',
-          arguments: {
-            'email': widget.email,
-            'verificationCode': widget.verificationCode,
-            'passcode': passcode,
-          },
-        );
+        _showErrorState();
       }
-    } catch (e) {
-      _showErrorState();
+    } else {
+      // Save passcode locally before navigating to register
+      await SharedPrefs.setString('user_password', passcode);
+
+      Navigator.pushNamed(
+        context,
+        '/register',
+        arguments: {
+          'email': widget.email,
+          'verificationCode': widget.verificationCode,
+          'passcode': passcode,
+        },
+      );
     }
+  } catch (e) {
+    _showErrorState();
+  } finally {
+    setState(() {
+      _isLoading = false;
+      _isSubmitting = false;
+    });
   }
+}
   
   void _onForgotPasscode() {
     showDialog(

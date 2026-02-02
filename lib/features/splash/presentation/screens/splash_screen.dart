@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
+import 'package:my_wallet/features/home/presentation/screens/HomeScreen.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:my_wallet/l10n/app_localizations.dart';
-import 'package:my_wallet/main.dart';
 
 class SplashScreen extends StatefulWidget {
   final Function(Locale) onLocaleChanged;
@@ -41,22 +39,29 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
   }
   
-  Future<void> _checkAuthStatus() async {
-    await SharedPrefs.init();
+// في splash_screen.dart، عدل _checkAuthStatus:
+Future<void> _checkAuthStatus() async {
+  await SharedPrefs.init();
 
-    // Simulate loading time
-    await Future.delayed(const Duration(seconds: 2));
+  // Simulate loading time
+  await Future.delayed(const Duration(seconds: 2));
 
-    final token = SharedPrefs.authToken;
+  final token = SharedPrefs.authToken;
 
-    if (token == null || token.isEmpty) {
-      // ❗ مفيش تسجيل → Onboarding
-      _navigateToOnboarding();
-    } else {
-      // ✅ مسجل دخول
-      _navigateToHome();
-    }
+  if (token == null || token.isEmpty) {
+    // ❗ مفيش تسجيل → Onboarding
+    _navigateToOnboarding();
+  } else {
+    // ✅ مسجل دخول - ننتقل لشاشة PIN مع إظهار البايومتريك أولاً
+    Navigator.of(context).pushReplacementNamed(
+      '/pin',
+      arguments: {
+        'isFirstTime': false,
+        'showBiometricFirst': true,
+      },
+    );
   }
+}
   
   void _navigateToOnboarding() {
     Navigator.of(context).pushReplacement(

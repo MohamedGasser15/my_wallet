@@ -4,6 +4,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:my_wallet/core/themes/app_theme.dart';
 import 'package:my_wallet/core/utils/language_service.dart';
 import 'package:my_wallet/core/utils/navigation_service.dart';
+import 'package:my_wallet/features/auth/presentation/screens/pin_screen.dart';
+import 'package:my_wallet/features/home/presentation/screens/HomeScreen.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:my_wallet/features/splash/presentation/screens/splash_screen.dart';
 import 'package:my_wallet/l10n/app_localizations.dart';
@@ -141,29 +143,19 @@ class _MyWalletAppState extends State<MyWalletApp> {
             return MaterialPageRoute(
               builder: (context) => const HomeScreen(),
             );
+          case '/pin':
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (context) => PinScreen(
+                isFirstTime: args?['isFirstTime'] ?? false,
+              ),
+            );
           default:
             return MaterialPageRoute(
               builder: (context) => SplashScreen(onLocaleChanged: _changeLocale),
             );
         }
       },
-    );
-  }
-}
-
-// HomeScreen مؤقتة
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
-      body: const Center(
-        child: Text('Welcome to Home Screen'),
-      ),
     );
   }
 }
