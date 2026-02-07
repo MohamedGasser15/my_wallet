@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcome.
   ///
   /// In en, this message translates to:
-  /// **'Welcome'**
+  /// **'Welcome to Mahfazati'**
   String get welcome;
 
   /// No description provided for @welcomeDescription.
@@ -179,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @arabic.
   ///
   /// In en, this message translates to:
-  /// **'العربية'**
+  /// **'Arabic'**
   String get arabic;
 
   /// No description provided for @english.
@@ -643,6 +643,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to verify the code'**
   String get verifyCodeFailed;
+
+  /// No description provided for @app.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get app;
+
+  /// No description provided for @appIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'App Icon'**
+  String get appIcon;
+
+  /// No description provided for @changeAppIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Change app icon'**
+  String get changeAppIcon;
+
+  /// No description provided for @displayMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Mode'**
+  String get displayMode;
+
+  /// No description provided for @selectDisplayTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Select display theme'**
+  String get selectDisplayTheme;
+
+  /// No description provided for @profileSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Settings'**
+  String get profileSettings;
+
+  /// No description provided for @personalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Details'**
+  String get personalDetails;
+
+  /// No description provided for @updateYourPersonalInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your personal information'**
+  String get updateYourPersonalInformation;
+
+  /// No description provided for @appLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'App Language'**
+  String get appLanguage;
+
+  /// No description provided for @changeAppLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change app language'**
+  String get changeAppLanguage;
+
+  /// No description provided for @security.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// No description provided for @changePasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Passcode'**
+  String get changePasscode;
+
+  /// No description provided for @updateYour6DigitPasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your 6-digit passcode'**
+  String get updateYour6DigitPasscode;
+
+  /// No description provided for @signWithFaceIDFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign with Face ID/Fingerprint'**
+  String get signWithFaceIDFingerprint;
+
+  /// No description provided for @useBiometricAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometric authentication'**
+  String get useBiometricAuthentication;
+
+  /// No description provided for @hideBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Balances'**
+  String get hideBalances;
+
+  /// No description provided for @hideYourBalancesForPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide your balances for privacy'**
+  String get hideYourBalancesForPrivacy;
+
+  /// No description provided for @aboutUs.
+  ///
+  /// In en, this message translates to:
+  /// **'About Us'**
+  String get aboutUs;
+
+  /// No description provided for @rateUsOnAppStorePlayStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate us on App Store/Play Store'**
+  String get rateUsOnAppStorePlayStore;
+
+  /// No description provided for @likeUsOnFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Like us on Facebook'**
+  String get likeUsOnFacebook;
+
+  /// No description provided for @followUsOnTwitter.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow us on Twitter'**
+  String get followUsOnTwitter;
+
+  /// No description provided for @followUsOnInstagram.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow us on Instagram'**
+  String get followUsOnInstagram;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get termsConditions;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @closeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Account'**
+  String get closeAccount;
+
+  /// No description provided for @permanentlyDeleteYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account'**
+  String get permanentlyDeleteYourAccount;
+
+  /// No description provided for @closeAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to close your account? This action cannot be undone.'**
+  String get closeAccountConfirmation;
+
+  /// No description provided for @logoutConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirmation;
+
+  /// No description provided for @manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manage;
+
+  /// No description provided for @light.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get light;
+
+  /// No description provided for @dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get dark;
+
+  /// No description provided for @system.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
+
+  /// No description provided for @featureComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature coming soon!'**
+  String get featureComingSoon;
+
+  /// No description provided for @cannotOpenStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open store'**
+  String get cannotOpenStore;
+
+  /// No description provided for @cannotOpenUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open URL'**
+  String get cannotOpenUrl;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
 }
 
 class _AppLocalizationsDelegate

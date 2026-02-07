@@ -1,54 +1,36 @@
+// core/services/api_service.dart
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:my_wallet/core/constants/app_constants.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
-
-  final String baseUrl = AppConstants.baseUrl;
   
-  Future<http.Response> post(
-    String endpoint, 
-    Map<String, dynamic> body, {
-    bool requiresAuth = false,
-  }) async {
-    try {
-      final headers = <String, String>{
+  late Dio _dio;
+  
+  ApiService._internal() {
+    _dio = Dio(BaseOptions(
+      baseUrl: AppConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {
         'Content-Type': 'application/json; charset=UTF-8',
-      };
-      
-      if (requiresAuth) {
-        final token = SharedPrefs.authToken;
-        if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-        }
-      }
-      
-      print('🌐 POST Request to: $baseUrl$endpoint');
-      print('📦 Body: ${jsonEncode(body)}');
-      
-      final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: headers,
-        body: jsonEncode(body),
-      );
-      
-      print('📥 Response Status: ${response.statusCode}');
-      print('📥 Response Body: ${response.body}');
-      
-      return response;
-    } catch (e) {
-      print('❌ POST Error: $e');
-      rethrow;
-    }
+      },
+    ));
+    
+    // Add interceptor for logging
+    _dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      requestHeader: true,
+    ));
   }
   
-  Future<http.Response> get(
-    String endpoint, {
-    Map<String, String>? queryParams,
+  Future<Response> post(
+    String endpoint, 
+    Map<String, dynamic> body, {
     bool requiresAuth = false,
   }) async {
     try {
@@ -61,22 +43,67 @@ class ApiService {
         }
       }
       
-      String url = '$baseUrl$endpoint';
-      if (queryParams != null) {
-        url += '?${Uri(queryParameters: queryParams).query}';
-      }
+      print('🌐 POST Request to: $endpoint');
+      print('📦 Body: ${jsonEncode(body)}');
       
-      print('🌐 GET Request to: $url');
-      
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
+      final response = await _dio.post(
+        endpoint,
+        data: body,
+        options: Options(headers: headers),
       );
       
       print('📥 Response Status: ${response.statusCode}');
-      print('📥 Response Body: ${response.body}');
+      print('📥 Response Body: ${response.data}');
       
       return response;
+    } on DioException catch (e) {
+      print('❌ POST Error: $e');
+      if (e.response != null) {
+        print('❌ Response: ${e.response?.data}');
+      }
+      rethrow;
+    } catch (e) {
+      print('❌ POST Error: $e');
+      rethrow;
+    }
+  }
+  
+  Future<Response> get(
+    String endpoint, {
+    Map<String, dynamic>? queryParams,
+    bool requiresAuth = false,
+  }) async {
+    try {
+      final headers = <String, String>{};
+      
+      if (requiresAuth) {
+        final token = SharedPrefs.authToken;
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+      }
+      
+      print('🌐 GET Request to: $endpoint');
+      if (queryParams != null) {
+        print('📋 Query Params: $queryParams');
+      }
+      
+      final response = await _dio.get(
+        endpoint,
+        queryParameters: queryParams,
+        options: Options(headers: headers),
+      );
+      
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Body: ${response.data}');
+      
+      return response;
+    } on DioException catch (e) {
+      print('❌ GET Error: $e');
+      if (e.response != null) {
+        print('❌ Response: ${e.response?.data}');
+      }
+      rethrow;
     } catch (e) {
       print('❌ GET Error: $e');
       rethrow;
@@ -84,43 +111,30 @@ class ApiService {
   }
   
   // Helper method to handle API responses
-Map<String, dynamic> handleResponse(http.Response response) {
-  print('🔄 Handling response: ${response.statusCode}');
-  
-  final statusCode = response.statusCode;
-  final body = response.body;
-
-  // لو الفويس بتاع السيرفر فاضي
-  if (body.isEmpty) {
-    return {
-      'success': false,
-      'message': 'Empty response from server',
-    };
-  }
-
-  try {
-    // حاول نفك JSON
-    final decoded = jsonDecode(body);
-
-    if (decoded is Map<String, dynamic>) {
+  Map<String, dynamic> handleResponse(Response response) {
+    print('🔄 Handling response: ${response.statusCode}');
+    
+    final statusCode = response.statusCode;
+    final data = response.data;
+    
+    if (data == null) {
       return {
-        'success': decoded['success'] ?? (statusCode == 200),
-        'message': decoded['message'] ?? '',
-        ...decoded,
+        'success': false,
+        'message': 'Empty response from server',
       };
     }
-
-    // لو decoded مش Map (مثلاً String) => نعتبره رسالة خطأ
+    
+    if (data is Map<String, dynamic>) {
+      return {
+        'success': data['success'] ?? (statusCode == 200 || statusCode == 201),
+        'message': data['message'] ?? '',
+        ...data,
+      };
+    }
+    
     return {
       'success': false,
-      'message': decoded.toString(),
-    };
-  } catch (e) {
-    // JSON غير صالح => نستخدم النص كما هو
-    return {
-      'success': false,
-      'message': body,
+      'message': data.toString(),
     };
   }
-}
 }

@@ -8,14 +8,19 @@ class LanguageService {
   static const Locale arabic = Locale('ar', 'SA');
   static const Locale english = Locale('en', 'US');
   
+  // ValueNotifier لتتبع تغييرات اللغة
+  static final ValueNotifier<Locale> localeNotifier = ValueNotifier<Locale>(english);
+  
+  static Future<void> init() async {
+    final savedLocale = await getSavedLocale();
+    localeNotifier.value = savedLocale;
+  }
+  
   static Future<Locale> getDeviceLocale() async {
     final platformLocale = PlatformDispatcher.instance.locale;
-    
-    // الكشف عن لغة الجهاز
     if (platformLocale.languageCode.startsWith('ar')) {
       return arabic;
     }
-    
     return english;
   }
   
@@ -27,7 +32,6 @@ class LanguageService {
       if (savedLanguage == 'ar') return arabic;
       if (savedLanguage == 'en') return english;
       
-      // إذا لم تكن هناك لغة محفوظة، استخدم لغة الجهاز
       return await getDeviceLocale();
     } catch (e) {
       return english;
@@ -38,6 +42,8 @@ class LanguageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, locale.languageCode);
+      // تحديث الـ ValueNotifier
+      localeNotifier.value = locale;
     } catch (e) {
       print('Error saving locale: $e');
     }

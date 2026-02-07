@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Mahfazati';
 
   @override
-  String get welcome => 'Welcome';
+  String get welcome => 'Welcome to Mahfazati';
 
   @override
   String get welcomeDescription =>
@@ -53,7 +53,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageYourMoneyEasily => 'Manage your money easily';
 
   @override
-  String get arabic => 'العربية';
+  String get arabic => 'Arabic';
 
   @override
   String get english => 'English';
@@ -287,4 +287,120 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifyCodeFailed => 'Failed to verify the code';
+
+  @override
+  String get app => 'App';
+
+  @override
+  String get appIcon => 'App Icon';
+
+  @override
+  String get changeAppIcon => 'Change app icon';
+
+  @override
+  String get displayMode => 'Display Mode';
+
+  @override
+  String get selectDisplayTheme => 'Select display theme';
+
+  @override
+  String get profileSettings => 'Profile Settings';
+
+  @override
+  String get personalDetails => 'Personal Details';
+
+  @override
+  String get updateYourPersonalInformation =>
+      'Update your personal information';
+
+  @override
+  String get appLanguage => 'App Language';
+
+  @override
+  String get changeAppLanguage => 'Change app language';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get changePasscode => 'Change Passcode';
+
+  @override
+  String get updateYour6DigitPasscode => 'Update your 6-digit passcode';
+
+  @override
+  String get signWithFaceIDFingerprint => 'Sign with Face ID/Fingerprint';
+
+  @override
+  String get useBiometricAuthentication => 'Use biometric authentication';
+
+  @override
+  String get hideBalances => 'Hide Balances';
+
+  @override
+  String get hideYourBalancesForPrivacy => 'Hide your balances for privacy';
+
+  @override
+  String get aboutUs => 'About Us';
+
+  @override
+  String get rateUsOnAppStorePlayStore => 'Rate us on App Store/Play Store';
+
+  @override
+  String get likeUsOnFacebook => 'Like us on Facebook';
+
+  @override
+  String get followUsOnTwitter => 'Follow us on Twitter';
+
+  @override
+  String get followUsOnInstagram => 'Follow us on Instagram';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsConditions => 'Terms & Conditions';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get closeAccount => 'Close Account';
+
+  @override
+  String get permanentlyDeleteYourAccount => 'Permanently delete your account';
+
+  @override
+  String get closeAccountConfirmation =>
+      'Are you sure you want to close your account? This action cannot be undone.';
+
+  @override
+  String get logoutConfirmation => 'Are you sure you want to logout?';
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get light => 'Light';
+
+  @override
+  String get dark => 'Dark';
+
+  @override
+  String get system => 'System';
+
+  @override
+  String get featureComingSoon => 'Feature coming soon!';
+
+  @override
+  String get cannotOpenStore => 'Cannot open store';
+
+  @override
+  String get cannotOpenUrl => 'Cannot open URL';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get selectLanguage => 'Select Language';
 }

@@ -281,13 +281,13 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-      color: AppColors.gray900,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.gray800),
+        color: AppColors.gray900,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.gray800),
+        ),
       ),
-    ),
     );
   }
 }

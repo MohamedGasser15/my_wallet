@@ -50,7 +50,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get manageYourMoneyEasily => 'إدارة أموالك بسهولة';
 
   @override
-  String get arabic => 'عربي';
+  String get arabic => 'العربية';
 
   @override
   String get english => 'English';
@@ -285,4 +285,121 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verifyCodeFailed => 'فشل التحقق من رمز التحقق';
+
+  @override
+  String get app => 'التطبيق';
+
+  @override
+  String get appIcon => 'أيقونة التطبيق';
+
+  @override
+  String get changeAppIcon => 'تغيير أيقونة التطبيق';
+
+  @override
+  String get displayMode => 'نمط العرض';
+
+  @override
+  String get selectDisplayTheme => 'اختر سمة العرض';
+
+  @override
+  String get profileSettings => 'إعدادات الملف الشخصي';
+
+  @override
+  String get personalDetails => 'تفاصيل شخصية';
+
+  @override
+  String get updateYourPersonalInformation => 'تحديث معلوماتك الشخصية';
+
+  @override
+  String get appLanguage => 'لغة التطبيق';
+
+  @override
+  String get changeAppLanguage => 'تغيير لغة التطبيق';
+
+  @override
+  String get security => 'الأمان';
+
+  @override
+  String get changePasscode => 'تغيير رمز المرور';
+
+  @override
+  String get updateYour6DigitPasscode => 'تحديث رمز المرور المكون من 6 أرقام';
+
+  @override
+  String get signWithFaceIDFingerprint =>
+      'التوقيع باستخدام Face ID / بصمة الإصبع';
+
+  @override
+  String get useBiometricAuthentication => 'استخدام المصادقة البيومترية';
+
+  @override
+  String get hideBalances => 'إخفاء الأرصدة';
+
+  @override
+  String get hideYourBalancesForPrivacy => 'إخفاء أرصدتك من أجل الخصوصية';
+
+  @override
+  String get aboutUs => 'معلومات عنا';
+
+  @override
+  String get rateUsOnAppStorePlayStore =>
+      'قيمنا على متجر التطبيقات / متجر Play';
+
+  @override
+  String get likeUsOnFacebook => 'أعجب بنا على فيسبوك';
+
+  @override
+  String get followUsOnTwitter => 'تابعنا على تويتر';
+
+  @override
+  String get followUsOnInstagram => 'تابعنا على إنستغرام';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get termsConditions => 'الشروط والأحكام';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get closeAccount => 'إغلاق الحساب';
+
+  @override
+  String get permanentlyDeleteYourAccount => 'حذف حسابك بشكل دائم';
+
+  @override
+  String get closeAccountConfirmation =>
+      'هل أنت متأكد أنك تريد إغلاق حسابك؟ لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get logoutConfirmation => 'هل أنت متأكد أنك تريد تسجيل الخروج؟';
+
+  @override
+  String get manage => 'إدارة';
+
+  @override
+  String get light => 'فاتح';
+
+  @override
+  String get dark => 'داكن';
+
+  @override
+  String get system => 'النظام';
+
+  @override
+  String get featureComingSoon => 'الميزة قريباً!';
+
+  @override
+  String get cannotOpenStore => 'لا يمكن فتح المتجر';
+
+  @override
+  String get cannotOpenUrl => 'لا يمكن فتح الرابط';
+
+  @override
+  String get error => 'خطأ';
+
+  @override
+  String get selectLanguage => 'اختر اللغة';
 }
