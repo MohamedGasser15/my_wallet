@@ -274,7 +274,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullName => 'Full Name';
 
   @override
-  String get userName => 'Username';
+  String get userName => 'John Doe';
 
   @override
   String get phoneNumber => 'Phone Number';
@@ -403,4 +403,229 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectLanguage => 'Select Language';
+
+  @override
+  String get welcomeBack => 'Welcome back,';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String errorLoadingData(Object error) {
+    return 'Failed to load data: $error';
+  }
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get addDeposit => 'Add Deposit';
+
+  @override
+  String get addWithdrawal => 'Add Withdrawal';
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get withdraw => 'Withdraw';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get enterTitle => 'Please enter a title';
+
+  @override
+  String get enterAmount => 'Please enter an amount';
+
+  @override
+  String get enterValidNumber => 'Please enter a valid number';
+
+  @override
+  String get amountGreaterThanZero => 'Amount must be greater than 0';
+
+  @override
+  String get descriptionOptional => 'Description (Optional)';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get depositAddedSuccess => 'Deposit added successfully!';
+
+  @override
+  String get withdrawalAddedSuccess => 'Withdrawal added successfully!';
+
+  @override
+  String get deleteTransaction => 'Delete Transaction';
+
+  @override
+  String confirmDeleteTransaction(Object title) {
+    return 'Are you sure you want to delete \"$title\"?';
+  }
+
+  @override
+  String get transactionDeletedSuccess => 'Transaction deleted successfully!';
+
+  @override
+  String get failedToDeleteTransaction => 'Failed to delete transaction';
+
+  @override
+  String errorDeletingTransaction(Object error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String failedToAddTransaction(Object error) {
+    return 'Failed to add transaction: $error';
+  }
+
+  @override
+  String get enterValidAmount => 'Please enter a valid amount';
+
+  @override
+  String get minutesAgo => 'm ago';
+
+  @override
+  String get hoursAgo => 'h ago';
+
+  @override
+  String get daysAgo => 'd ago';
+
+  @override
+  String get analytics => 'Analytics';
+
+  @override
+  String get trackSpendingHabits => 'Track your spending habits';
+
+  @override
+  String get totalIncome => 'Total Income';
+
+  @override
+  String get totalExpenses => 'Total Expenses';
+
+  @override
+  String get spendingOverview => 'Spending Overview';
+
+  @override
+  String get chartVisualization => 'Chart Visualization';
+
+  @override
+  String get topCategories => 'Top Categories';
+
+  @override
+  String get categoryFoodDining => 'Food & Dining';
+
+  @override
+  String get categoryShopping => 'Shopping';
+
+  @override
+  String get categoryTransportation => 'Transportation';
+
+  @override
+  String get categoryEntertainment => 'Entertainment';
+
+  @override
+  String get categoryUtilities => 'Utilities';
+
+  @override
+  String get allTransactionsInOnePlace => 'All your transactions in one place';
+
+  @override
+  String get searchTransactions => 'Search transactions...';
+
+  @override
+  String get salaryDeposit => 'Salary Deposit';
+
+  @override
+  String get groceryShopping => 'Grocery Shopping';
+
+  @override
+  String get netflixSubscription => 'Netflix Subscription';
+
+  @override
+  String get freelancePayment => 'Freelance Payment';
+
+  @override
+  String get electricityBill => 'Electricity Bill';
+
+  @override
+  String get onlinePurchase => 'Online Purchase';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get categoryFreelance => 'Freelance';
+
+  @override
+  String get paymentMethods => 'Payment Methods';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get helpSupport => 'Help & Support';
+
+  @override
+  String get userEmail => 'john.doe@email.com';
+
+  @override
+  String get logoutConfirmationDescription =>
+      'Are you sure you want to logout?';
+
+  @override
+  String get monthlyBudget => 'Monthly Budget';
+
+  @override
+  String get categorySalary => 'Salary';
+
+  @override
+  String get categoryFood => 'Food';
+
+  @override
+  String get categoryBills => 'Bills';
+
+  @override
+  String get categoryHealth => 'Health';
+
+  @override
+  String get categoryEducation => 'Education';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String get setMonthlyBudget => 'Set Monthly Budget';
+
+  @override
+  String get monthlyBudgetAmount => 'Monthly Budget Amount';
+
+  @override
+  String budgetUpdated(Object amount) {
+    return 'Budget updated to $amount';
+  }
+
+  @override
+  String get budgetTip => 'Budget Tip';
+
+  @override
+  String get tryReducingExpenses =>
+      'Try reducing entertainment and dining expenses.';
+
+  @override
+  String get considerSaving => 'Consider saving 20% of your income.';
+
+  @override
+  String get addMoneyToWallet => 'Add Money to Wallet';
+
+  @override
+  String get recordExpense => 'Record Expense';
+
+  @override
+  String get deposit => 'Deposit';
 }

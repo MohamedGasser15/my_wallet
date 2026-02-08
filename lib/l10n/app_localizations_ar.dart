@@ -272,7 +272,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fullName => 'الاسم الكامل';
 
   @override
-  String get userName => 'اسم المستخدم';
+  String get userName => 'جون دو';
 
   @override
   String get phoneNumber => 'رقم الهاتف';
@@ -402,4 +402,229 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectLanguage => 'اختر اللغة';
+
+  @override
+  String get welcomeBack => 'مرحبًا بعودتك،';
+
+  @override
+  String get tryAgain => 'حاول مرة أخرى';
+
+  @override
+  String errorLoadingData(Object error) {
+    return 'فشل تحميل البيانات: $error';
+  }
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get addDeposit => 'إضافة إيداع';
+
+  @override
+  String get addWithdrawal => 'إضافة سحب';
+
+  @override
+  String get transfer => 'تحويل';
+
+  @override
+  String get withdraw => 'سحب';
+
+  @override
+  String get title => 'العنوان';
+
+  @override
+  String get enterTitle => 'الرجاء إدخال عنوان';
+
+  @override
+  String get enterAmount => 'الرجاء إدخال المبلغ';
+
+  @override
+  String get enterValidNumber => 'الرجاء إدخال رقم صحيح';
+
+  @override
+  String get amountGreaterThanZero => 'يجب أن يكون المبلغ أكبر من صفر';
+
+  @override
+  String get descriptionOptional => 'الوصف (اختياري)';
+
+  @override
+  String get add => 'إضافة';
+
+  @override
+  String get depositAddedSuccess => 'تم إضافة الإيداع بنجاح!';
+
+  @override
+  String get withdrawalAddedSuccess => 'تم إضافة السحب بنجاح!';
+
+  @override
+  String get deleteTransaction => 'حذف المعاملة';
+
+  @override
+  String confirmDeleteTransaction(Object title) {
+    return 'هل أنت متأكد من حذف \"$title\"؟';
+  }
+
+  @override
+  String get transactionDeletedSuccess => 'تم حذف المعاملة بنجاح!';
+
+  @override
+  String get failedToDeleteTransaction => 'فشل حذف المعاملة';
+
+  @override
+  String errorDeletingTransaction(Object error) {
+    return 'خطأ: $error';
+  }
+
+  @override
+  String failedToAddTransaction(Object error) {
+    return 'فشل إضافة المعاملة: $error';
+  }
+
+  @override
+  String get enterValidAmount => 'الرجاء إدخال مبلغ صحيح';
+
+  @override
+  String get minutesAgo => 'دقيقة مضت';
+
+  @override
+  String get hoursAgo => 'ساعة مضت';
+
+  @override
+  String get daysAgo => 'يوم مضى';
+
+  @override
+  String get analytics => 'التحليلات';
+
+  @override
+  String get trackSpendingHabits => 'تتبع عادات الإنفاق';
+
+  @override
+  String get totalIncome => 'إجمالي الدخل';
+
+  @override
+  String get totalExpenses => 'إجمالي المصروفات';
+
+  @override
+  String get spendingOverview => 'نظرة عامة على الإنفاق';
+
+  @override
+  String get chartVisualization => 'تصوير بياني';
+
+  @override
+  String get topCategories => 'أفضل الفئات';
+
+  @override
+  String get categoryFoodDining => 'الطعام والمطاعم';
+
+  @override
+  String get categoryShopping => 'التسوق';
+
+  @override
+  String get categoryTransportation => 'المواصلات';
+
+  @override
+  String get categoryEntertainment => 'الترفيه';
+
+  @override
+  String get categoryUtilities => 'المرافق';
+
+  @override
+  String get allTransactionsInOnePlace => 'كل معاملاتك في مكان واحد';
+
+  @override
+  String get searchTransactions => 'بحث في المعاملات...';
+
+  @override
+  String get salaryDeposit => 'إيداع الراتب';
+
+  @override
+  String get groceryShopping => 'تسوق البقالة';
+
+  @override
+  String get netflixSubscription => 'اشتراك Netflix';
+
+  @override
+  String get freelancePayment => 'دفعة عمل حر';
+
+  @override
+  String get electricityBill => 'فاتورة الكهرباء';
+
+  @override
+  String get onlinePurchase => 'شراء عبر الإنترنت';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get yesterday => 'أمس';
+
+  @override
+  String get categoryFreelance => 'عمل حر';
+
+  @override
+  String get paymentMethods => 'طرق الدفع';
+
+  @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get helpSupport => 'المساعدة والدعم';
+
+  @override
+  String get userEmail => 'john.doe@email.com';
+
+  @override
+  String get logoutConfirmationDescription =>
+      'هل أنت متأكد أنك تريد تسجيل الخروج؟';
+
+  @override
+  String get monthlyBudget => 'الميزانية الشهرية';
+
+  @override
+  String get categorySalary => 'الراتب';
+
+  @override
+  String get categoryFood => 'الطعام';
+
+  @override
+  String get categoryBills => 'الفواتير';
+
+  @override
+  String get categoryHealth => 'الصحة';
+
+  @override
+  String get categoryEducation => 'التعليم';
+
+  @override
+  String get categoryOther => 'أخرى';
+
+  @override
+  String get setMonthlyBudget => 'تعيين الميزانية الشهرية';
+
+  @override
+  String get monthlyBudgetAmount => 'مبلغ الميزانية الشهرية';
+
+  @override
+  String budgetUpdated(Object amount) {
+    return 'تم تحديث الميزانية إلى $amount';
+  }
+
+  @override
+  String get budgetTip => 'نصيحة مالية';
+
+  @override
+  String get tryReducingExpenses =>
+      'حاول تقليل نفقات الترفيه وتناول الطعام خارج المنزل.';
+
+  @override
+  String get considerSaving => 'فكر في توفير 20٪ من دخلك.';
+
+  @override
+  String get addMoneyToWallet => 'إضافة أموال إلى المحفظة';
+
+  @override
+  String get recordExpense => 'تسجيل مصروف';
+
+  @override
+  String get deposit => 'إيداع';
 }

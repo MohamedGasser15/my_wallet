@@ -617,7 +617,7 @@ abstract class AppLocalizations {
   /// No description provided for @userName.
   ///
   /// In en, this message translates to:
-  /// **'Username'**
+  /// **'John Doe'**
   String get userName;
 
   /// No description provided for @phoneNumber.
@@ -871,6 +871,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Language'**
   String get selectLanguage;
+
+  /// No description provided for @welcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back,'**
+  String get welcomeBack;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @errorLoadingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load data: {error}'**
+  String errorLoadingData(Object error);
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @addDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Deposit'**
+  String get addDeposit;
+
+  /// No description provided for @addWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Withdrawal'**
+  String get addWithdrawal;
+
+  /// No description provided for @transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transfer;
+
+  /// No description provided for @withdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get withdraw;
+
+  /// No description provided for @title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get title;
+
+  /// No description provided for @enterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title'**
+  String get enterTitle;
+
+  /// No description provided for @enterAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an amount'**
+  String get enterAmount;
+
+  /// No description provided for @enterValidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid number'**
+  String get enterValidNumber;
+
+  /// No description provided for @amountGreaterThanZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than 0'**
+  String get amountGreaterThanZero;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (Optional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @depositAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit added successfully!'**
+  String get depositAddedSuccess;
+
+  /// No description provided for @withdrawalAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal added successfully!'**
+  String get withdrawalAddedSuccess;
+
+  /// No description provided for @deleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Transaction'**
+  String get deleteTransaction;
+
+  /// No description provided for @confirmDeleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{title}\"?'**
+  String confirmDeleteTransaction(Object title);
+
+  /// No description provided for @transactionDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction deleted successfully!'**
+  String get transactionDeletedSuccess;
+
+  /// No description provided for @failedToDeleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete transaction'**
+  String get failedToDeleteTransaction;
+
+  /// No description provided for @errorDeletingTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorDeletingTransaction(Object error);
+
+  /// No description provided for @failedToAddTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add transaction: {error}'**
+  String failedToAddTransaction(Object error);
+
+  /// No description provided for @enterValidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid amount'**
+  String get enterValidAmount;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'m ago'**
+  String get minutesAgo;
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'h ago'**
+  String get hoursAgo;
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'d ago'**
+  String get daysAgo;
+
+  /// No description provided for @analytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get analytics;
+
+  /// No description provided for @trackSpendingHabits.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your spending habits'**
+  String get trackSpendingHabits;
+
+  /// No description provided for @totalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Income'**
+  String get totalIncome;
+
+  /// No description provided for @totalExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Expenses'**
+  String get totalExpenses;
+
+  /// No description provided for @spendingOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending Overview'**
+  String get spendingOverview;
+
+  /// No description provided for @chartVisualization.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart Visualization'**
+  String get chartVisualization;
+
+  /// No description provided for @topCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Categories'**
+  String get topCategories;
+
+  /// No description provided for @categoryFoodDining.
+  ///
+  /// In en, this message translates to:
+  /// **'Food & Dining'**
+  String get categoryFoodDining;
+
+  /// No description provided for @categoryShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get categoryShopping;
+
+  /// No description provided for @categoryTransportation.
+  ///
+  /// In en, this message translates to:
+  /// **'Transportation'**
+  String get categoryTransportation;
+
+  /// No description provided for @categoryEntertainment.
+  ///
+  /// In en, this message translates to:
+  /// **'Entertainment'**
+  String get categoryEntertainment;
+
+  /// No description provided for @categoryUtilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get categoryUtilities;
+
+  /// No description provided for @allTransactionsInOnePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'All your transactions in one place'**
+  String get allTransactionsInOnePlace;
+
+  /// No description provided for @searchTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions...'**
+  String get searchTransactions;
+
+  /// No description provided for @salaryDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary Deposit'**
+  String get salaryDeposit;
+
+  /// No description provided for @groceryShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Grocery Shopping'**
+  String get groceryShopping;
+
+  /// No description provided for @netflixSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix Subscription'**
+  String get netflixSubscription;
+
+  /// No description provided for @freelancePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Freelance Payment'**
+  String get freelancePayment;
+
+  /// No description provided for @electricityBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Electricity Bill'**
+  String get electricityBill;
+
+  /// No description provided for @onlinePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Purchase'**
+  String get onlinePurchase;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @categoryFreelance.
+  ///
+  /// In en, this message translates to:
+  /// **'Freelance'**
+  String get categoryFreelance;
+
+  /// No description provided for @paymentMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Methods'**
+  String get paymentMethods;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @helpSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get helpSupport;
+
+  /// No description provided for @userEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'john.doe@email.com'**
+  String get userEmail;
+
+  /// No description provided for @logoutConfirmationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirmationDescription;
+
+  /// No description provided for @monthlyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Budget'**
+  String get monthlyBudget;
+
+  /// No description provided for @categorySalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get categorySalary;
+
+  /// No description provided for @categoryFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get categoryFood;
+
+  /// No description provided for @categoryBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills'**
+  String get categoryBills;
+
+  /// No description provided for @categoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get categoryHealth;
+
+  /// No description provided for @categoryEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Education'**
+  String get categoryEducation;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
+  /// No description provided for @setMonthlyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Monthly Budget'**
+  String get setMonthlyBudget;
+
+  /// No description provided for @monthlyBudgetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Budget Amount'**
+  String get monthlyBudgetAmount;
+
+  /// No description provided for @budgetUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget updated to {amount}'**
+  String budgetUpdated(Object amount);
+
+  /// No description provided for @budgetTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget Tip'**
+  String get budgetTip;
+
+  /// No description provided for @tryReducingExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Try reducing entertainment and dining expenses.'**
+  String get tryReducingExpenses;
+
+  /// No description provided for @considerSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Consider saving 20% of your income.'**
+  String get considerSaving;
+
+  /// No description provided for @addMoneyToWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Money to Wallet'**
+  String get addMoneyToWallet;
+
+  /// No description provided for @recordExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Expense'**
+  String get recordExpense;
+
+  /// No description provided for @deposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get deposit;
 }
 
 class _AppLocalizationsDelegate

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/settings/presentation/screens/settings_screen.dart';
-import 'package:my_wallet/features/settings/presentation/widgets/authentication_settings_bottom_sheet.dart';
 import 'package:my_wallet/features/wallet/data/repositories/wallet_repository.dart';
 import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
 
@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           HomeTab(),
           AnalyticsTab(),
           TransactionsTab(),
-          ProfileTab(),
+          BudgetTab(), // Changed from ProfileTab to BudgetTab
         ],
       ),
       bottomNavigationBar: Container(
@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildNavItem(0, Icons.home_outlined, Icons.home_filled, isDarkMode),
             _buildNavItem(1, Icons.pie_chart_outline, Icons.pie_chart, isDarkMode),
             _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long, isDarkMode),
-            _buildNavItem(3, Icons.person_outlined, Icons.person, isDarkMode),
+            _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, isDarkMode), // Changed icon
           ],
         ),
       ),
@@ -122,18 +122,18 @@ class _HomeTabState extends State<HomeTab> {
   String? _errorMessage;
   TransactionType _selectedFilter = TransactionType.all;
 
-  // قائمة الفئات الثابتة
-  final List<String> _categories = [
-    'Salary',
-    'Food',
-    'Shopping',
-    'Transportation',
-    'Entertainment',
-    'Bills',
-    'Health',
-    'Education',
-    'Other'
-  ];
+List<String> get _categories => [
+  context.l10n.categorySalary,
+  context.l10n.categoryFood,
+  context.l10n.categoryShopping,
+  context.l10n.categoryTransportation,
+  context.l10n.categoryEntertainment,
+  context.l10n.categoryBills,
+  context.l10n.categoryHealth,
+  context.l10n.categoryEducation,
+  context.l10n.categoryOther
+];
+
 
   @override
   void initState() {
@@ -148,13 +148,16 @@ class _HomeTabState extends State<HomeTab> {
     });
 
     try {
+      // محاكاة تأخير الشبكة
+      await Future.delayed(const Duration(seconds: 2));
+      
       final data = await _walletRepository.getHomeData();
       setState(() {
         _homeData = data;
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load data: $e';
+        _errorMessage = context.l10n.errorLoadingData(e.toString());
       });
     } finally {
       setState(() {
@@ -167,10 +170,10 @@ class _HomeTabState extends State<HomeTab> {
     await _loadHomeData();
   }
 
-  List<TransactionFilter> _filters = [
-    TransactionFilter(type: TransactionType.all, label: 'All'),
-    TransactionFilter(type: TransactionType.income, label: 'Income'),
-    TransactionFilter(type: TransactionType.expense, label: 'Expense'),
+  List<TransactionFilter> get _filters => [
+    TransactionFilter(type: TransactionType.all, label: context.l10n.all),
+    TransactionFilter(type: TransactionType.income, label: context.l10n.income),
+    TransactionFilter(type: TransactionType.expense, label: context.l10n.expense),
   ];
 
   List<WalletTransaction> get _filteredTransactions {
@@ -229,7 +232,9 @@ class _HomeTabState extends State<HomeTab> {
                         child: Column(
                           children: [
                             Text(
-                              type == TransactionType.income ? 'Add Deposit' : 'Add Withdrawal',
+                              type == TransactionType.income 
+                                ? context.l10n.addDeposit 
+                                : context.l10n.addWithdrawal,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -241,7 +246,7 @@ class _HomeTabState extends State<HomeTab> {
                             TextFormField(
                               controller: titleController,
                               decoration: InputDecoration(
-                                labelText: 'Title',
+                                labelText: context.l10n.title,
                                 labelStyle: TextStyle(
                                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                 ),
@@ -262,7 +267,7 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter a title';
+                                  return context.l10n.enterTitle;
                                 }
                                 return null;
                               },
@@ -273,7 +278,7 @@ class _HomeTabState extends State<HomeTab> {
                               controller: amountController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: 'Amount',
+                                labelText: context.l10n.amount,
                                 labelStyle: TextStyle(
                                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                 ),
@@ -294,13 +299,13 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter an amount';
+                                  return context.l10n.enterAmount;
                                 }
                                 if (double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
+                                  return context.l10n.enterValidNumber;
                                 }
                                 if (double.parse(value) <= 0) {
-                                  return 'Amount must be greater than 0';
+                                  return context.l10n.amountGreaterThanZero;
                                 }
                                 return null;
                               },
@@ -315,7 +320,7 @@ class _HomeTabState extends State<HomeTab> {
                               child: DropdownButtonFormField<String>(
                                 value: selectedCategory,
                                 decoration: InputDecoration(
-                                  labelText: 'Category',
+                                  labelText: context.l10n.category,
                                   labelStyle: TextStyle(
                                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                   ),
@@ -354,7 +359,7 @@ class _HomeTabState extends State<HomeTab> {
                               controller: descriptionController,
                               maxLines: 2,
                               decoration: InputDecoration(
-                                labelText: 'Description (Optional)',
+                                labelText: context.l10n.descriptionOptional,
                                 labelStyle: TextStyle(
                                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                 ),
@@ -393,7 +398,7 @@ class _HomeTabState extends State<HomeTab> {
                                       ),
                                     ),
                                     child: Text(
-                                      'Cancel',
+                                      context.l10n.cancel,
                                       style: TextStyle(
                                         color: isDarkMode ? Colors.white : Colors.black,
                                         fontWeight: FontWeight.w600,
@@ -407,20 +412,19 @@ class _HomeTabState extends State<HomeTab> {
                                     onPressed: _isSubmitting
                                         ? null
                                         : () async {
-                                            // التحقق من المدخلات
                                             if (titleController.text.isEmpty) {
-                                              _showErrorSnackbar('Please enter a title');
+                                              _showErrorSnackbar(context.l10n.enterTitle);
                                               return;
                                             }
                                             
                                             if (amountController.text.isEmpty) {
-                                              _showErrorSnackbar('Please enter an amount');
+                                              _showErrorSnackbar(context.l10n.enterAmount);
                                               return;
                                             }
                                             
                                             final amount = double.tryParse(amountController.text);
                                             if (amount == null || amount <= 0) {
-                                              _showErrorSnackbar('Please enter a valid amount');
+                                              _showErrorSnackbar(context.l10n.enterValidAmount);
                                               return;
                                             }
                                             
@@ -429,7 +433,6 @@ class _HomeTabState extends State<HomeTab> {
                                             });
                                             
                                             try {
-                                              // إضافة المعاملة عبر API
                                               await _walletRepository.addTransaction(
                                                 title: titleController.text,
                                                 description: descriptionController.text,
@@ -439,19 +442,16 @@ class _HomeTabState extends State<HomeTab> {
                                               );
                                               
                                               Navigator.pop(context);
-                                              
-                                              // تحديث البيانات
                                               await _loadHomeData();
                                               
-                                              // عرض رسالة نجاح
                                               _showSuccessMessage(
                                                 type == TransactionType.income 
-                                                  ? 'Deposit added successfully!' 
-                                                  : 'Withdrawal added successfully!'
+                                                  ? context.l10n.depositAddedSuccess
+                                                  : context.l10n.withdrawalAddedSuccess
                                               );
                                               
                                             } catch (e) {
-                                              _showErrorSnackbar('Failed to add transaction: $e');
+                                              _showErrorSnackbar(context.l10n.failedToAddTransaction(e.toString()));
                                             } finally {
                                               setState(() {
                                                 _isSubmitting = false;
@@ -476,7 +476,7 @@ class _HomeTabState extends State<HomeTab> {
                                             ),
                                           )
                                         : Text(
-                                            'Add',
+                                            context.l10n.add,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -508,13 +508,13 @@ class _HomeTabState extends State<HomeTab> {
         return AlertDialog(
           backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
           title: Text(
-            'Delete Transaction',
+            context.l10n.deleteTransaction,
             style: TextStyle(
               color: isDarkMode ? Colors.white : Colors.black,
             ),
           ),
           content: Text(
-            'Are you sure you want to delete "${transaction.title}"?',
+            context.l10n.confirmDeleteTransaction(transaction.title),
             style: TextStyle(
               color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
             ),
@@ -523,7 +523,7 @@ class _HomeTabState extends State<HomeTab> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Cancel',
+                context.l10n.cancel,
                 style: TextStyle(
                   color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
                 ),
@@ -534,9 +534,9 @@ class _HomeTabState extends State<HomeTab> {
                 Navigator.pop(context);
                 await _deleteTransaction(transaction);
               },
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.red),
+              child: Text(
+                context.l10n.delete,
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           ],
@@ -550,16 +550,13 @@ class _HomeTabState extends State<HomeTab> {
       final success = await _walletRepository.deleteTransaction(transaction.id);
       
       if (success) {
-        // تحديث البيانات
         await _loadHomeData();
-        
-        // عرض رسالة نجاح
-        _showSuccessMessage('Transaction deleted successfully!');
+        _showSuccessMessage(context.l10n.transactionDeletedSuccess);
       } else {
-        _showErrorSnackbar('Failed to delete transaction');
+        _showErrorSnackbar(context.l10n.failedToDeleteTransaction);
       }
     } catch (e) {
-      _showErrorSnackbar('Error: $e');
+      _showErrorSnackbar(context.l10n.errorDeletingTransaction(e.toString()));
     }
   }
 
@@ -595,6 +592,346 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  // Skeleton Widgets
+  Widget _buildSkeletonAppBar(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 100,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: 150,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonBalanceCard(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 80,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: 200,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: 80,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: 80,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonQuickActions(bool isDarkMode) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(4, (index) {
+          return Column(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonTransactionHeader(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 120,
+            height: 18,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          Container(
+            width: 50,
+            height: 14,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonFilters(bool isDarkMode) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: List.generate(3, (index) {
+          return Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonTransactionCard(bool isDarkMode) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 120,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 80,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: 60,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: 40,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoading(bool isDarkMode) {
+    return Shimmer.fromColors(
+      baseColor: isDarkMode ? Colors.grey[900]! : Colors.grey[300]!,
+      highlightColor: isDarkMode ? Colors.grey[800]! : Colors.grey[100]!,
+      child: Column(
+        children: [
+          _buildSkeletonAppBar(isDarkMode),
+          const SizedBox(height: 20),
+          _buildSkeletonBalanceCard(isDarkMode),
+          _buildSkeletonQuickActions(isDarkMode),
+          _buildSkeletonTransactionHeader(isDarkMode),
+          _buildSkeletonFilters(isDarkMode),
+          ...List.generate(3, (index) => _buildSkeletonTransactionCard(isDarkMode)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -607,86 +944,10 @@ class _HomeTabState extends State<HomeTab> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // App Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back,',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'John Doe',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.notifications_outlined,
-                              size: 20,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                            onPressed: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.settings_outlined,
-                              size: 20,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
-                            onPressed: _showAuthenticationSettings,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Loading State
+              // Skeleton Loading or Content
               if (_isLoading)
-                Padding(
-                  padding: const EdgeInsets.only(top: 100),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
+                _buildSkeletonLoading(isDarkMode),
 
-              // Error State
               if (_errorMessage != null && !_isLoading)
                 Padding(
                   padding: const EdgeInsets.all(20),
@@ -708,14 +969,90 @@ class _HomeTabState extends State<HomeTab> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadHomeData,
-                        child: const Text('Try Again'),
+                        child: Text(context.l10n.tryAgain),
                       ),
                     ],
                   ),
                 ),
 
-              // Success State
               if (_homeData != null && !_isLoading) ...[
+                // App Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.welcomeBack,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.l10n.userName,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.notifications_outlined,
+                                size: 20,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
+                              onPressed: () {},
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.settings_outlined,
+                                size: 20,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SettingsScreen(
+                                      onLocaleChanged: (locale) {},
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
                 // Balance Card
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -811,25 +1148,25 @@ class _HomeTabState extends State<HomeTab> {
                     children: [
                       _buildQuickAction(
                         Icons.add,
-                        'Add Deposit',
+                        context.l10n.addDeposit,
                         () => _showAddTransactionDialog(TransactionType.income),
                         isDarkMode,
                       ),
                       _buildQuickAction(
                         Icons.remove,
-                        'Add Withdrawal',
+                        context.l10n.addWithdrawal,
                         () => _showAddTransactionDialog(TransactionType.expense),
                         isDarkMode,
                       ),
                       _buildQuickAction(
                         Icons.swap_horiz,
-                        'Transfer',
+                        context.l10n.transfer,
                         () {},
                         isDarkMode,
                       ),
                       _buildQuickAction(
                         Icons.download,
-                        'Withdraw',
+                        context.l10n.withdraw,
                         () {},
                         isDarkMode,
                       ),
@@ -1112,69 +1449,6 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildLoadingSkeleton(bool isDarkMode) {
-    return Column(
-      children: List.generate(3, (index) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 80,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 80,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),
@@ -1206,38 +1480,21 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-void _showAuthenticationSettings() {
-// في home_screen.dart، أينما تفتح SettingsScreen:
-Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => SettingsScreen(
-      onLocaleChanged: (locale) {
-        // هذه الدالة ستتم مناداتها من SettingsContent
-        // ولا حاجة لعمل أي شيء هنا لأن MyWalletApp يستمع للتغييرات
-      },
-    ),
-  ),
-);
-}
-
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
     
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return '${difference.inMinutes}${context.l10n.minutesAgo}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return '${difference.inHours}${context.l10n.hoursAgo}';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return '${difference.inDays}${context.l10n.daysAgo}';
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
   }
 }
-
-// بقية الـ Tabs كما هي (بدون تغيير)
 
 class AnalyticsTab extends StatelessWidget {
   const AnalyticsTab({super.key});
@@ -1260,7 +1517,7 @@ class AnalyticsTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Analytics',
+                        context.l10n.analytics,
                         style: TextStyle(
                           color: isDarkMode ? Colors.white : Colors.black,
                           fontSize: 28,
@@ -1269,7 +1526,7 @@ class AnalyticsTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Track your spending habits',
+                        context.l10n.trackSpendingHabits,
                         style: TextStyle(
                           color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                           fontSize: 14,
@@ -1301,7 +1558,7 @@ class AnalyticsTab extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      'Total Income',
+                      context.l10n.totalIncome,
                       '\$15,000',
                       Icons.trending_up,
                       Colors.green[800]!,
@@ -1311,7 +1568,7 @@ class AnalyticsTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'Total Expenses',
+                      context.l10n.totalExpenses,
                       '\$2,499',
                       Icons.trending_down,
                       Colors.red[800]!,
@@ -1339,7 +1596,7 @@ class AnalyticsTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Spending Overview',
+                    context.l10n.spendingOverview,
                     style: TextStyle(
                       color: isDarkMode ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w700,
@@ -1355,7 +1612,7 @@ class AnalyticsTab extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        'Chart Visualization',
+                        context.l10n.chartVisualization,
                         style: TextStyle(
                           color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         ),
@@ -1383,7 +1640,7 @@ class AnalyticsTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Top Categories',
+                    context.l10n.topCategories,
                     style: TextStyle(
                       color: isDarkMode ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w700,
@@ -1391,11 +1648,11 @@ class AnalyticsTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildCategoryItem('Food & Dining', '\$850', Icons.restaurant, isDarkMode),
-                  _buildCategoryItem('Shopping', '\$650', Icons.shopping_bag, isDarkMode),
-                  _buildCategoryItem('Transportation', '\$320', Icons.directions_car, isDarkMode),
-                  _buildCategoryItem('Entertainment', '\$280', Icons.movie, isDarkMode),
-                  _buildCategoryItem('Utilities', '\$210', Icons.bolt, isDarkMode),
+                  _buildCategoryItem(context.l10n.categoryFoodDining, '\$850', Icons.restaurant, isDarkMode),
+                  _buildCategoryItem(context.l10n.categoryShopping, '\$650', Icons.shopping_bag, isDarkMode),
+                  _buildCategoryItem(context.l10n.categoryTransportation, '\$320', Icons.directions_car, isDarkMode),
+                  _buildCategoryItem(context.l10n.categoryEntertainment, '\$280', Icons.movie, isDarkMode),
+                  _buildCategoryItem(context.l10n.categoryUtilities, '\$210', Icons.bolt, isDarkMode),
                 ],
               ),
             ),
@@ -1520,52 +1777,52 @@ class TransactionsTab extends StatelessWidget {
     
     final List<Map<String, dynamic>> transactions = [
       {
-        'title': 'Salary Deposit',
-        'category': 'Salary',
+        'title': context.l10n.salaryDeposit,
+        'category': context.l10n.categorySalary,
         'amount': 5000.0,
         'type': 'income',
         'icon': Icons.account_balance_wallet,
-        'date': 'Today',
+        'date': context.l10n.today,
       },
       {
-        'title': 'Grocery Shopping',
-        'category': 'Food',
+        'title': context.l10n.groceryShopping,
+        'category': context.l10n.categoryFood,
         'amount': -150.0,
         'type': 'expense',
         'icon': Icons.restaurant,
-        'date': 'Today',
+        'date': context.l10n.today,
       },
       {
-        'title': 'Netflix Subscription',
-        'category': 'Entertainment',
+        'title': context.l10n.netflixSubscription,
+        'category': context.l10n.categoryEntertainment,
         'amount': -15.99,
         'type': 'expense',
         'icon': Icons.movie,
-        'date': 'Yesterday',
+        'date': context.l10n.yesterday,
       },
       {
-        'title': 'Freelance Payment',
-        'category': 'Freelance',
+        'title': context.l10n.freelancePayment,
+        'category': context.l10n.categoryFreelance,
         'amount': 1200.0,
         'type': 'income',
         'icon': Icons.work_outline,
-        'date': '2 days ago',
+        'date': context.l10n.daysAgo,
       },
       {
-        'title': 'Electricity Bill',
-        'category': 'Utilities',
+        'title': context.l10n.electricityBill,
+        'category': context.l10n.categoryUtilities,
         'amount': -85.50,
         'type': 'expense',
         'icon': Icons.bolt,
-        'date': '3 days ago',
+        'date': context.l10n.daysAgo,
       },
       {
-        'title': 'Online Purchase',
-        'category': 'Shopping',
+        'title': context.l10n.onlinePurchase,
+        'category': context.l10n.categoryShopping,
         'amount': -249.99,
         'type': 'expense',
         'icon': Icons.shopping_bag,
-        'date': '5 days ago',
+        'date': context.l10n.daysAgo,
       },
     ];
 
@@ -1582,7 +1839,7 @@ class TransactionsTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Transactions',
+                      context.l10n.transactions,
                       style: TextStyle(
                         color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 28,
@@ -1591,7 +1848,7 @@ class TransactionsTab extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'All your transactions in one place',
+                      context.l10n.allTransactionsInOnePlace,
                       style: TextStyle(
                         color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         fontSize: 14,
@@ -1639,7 +1896,7 @@ class TransactionsTab extends StatelessWidget {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search transactions...',
+                        hintText: context.l10n.searchTransactions,
                         hintStyle: TextStyle(
                           color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         ),
@@ -1729,7 +1986,7 @@ class TransactionsTab extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            isIncome ? 'Income' : 'Expense',
+                            isIncome ? context.l10n.income : context.l10n.expense,
                             style: TextStyle(
                               color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                               fontSize: 12,
@@ -1749,51 +2006,238 @@ class TransactionsTab extends StatelessWidget {
   }
 }
 
-class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key});
+class BudgetTab extends StatefulWidget {
+  const BudgetTab({super.key});
+
+  @override
+  State<BudgetTab> createState() => _BudgetTabState();
+}
+
+class _BudgetTabState extends State<BudgetTab> {
+  double _monthlyBudget = 3000.0;
+  double _currentSpending = 1850.0;
+  
+  // تحديث أسماء الفئات لاستخدام الترجمة
+  final Map<String, double> _categoryBudgets = {
+    'Food': 500.0,
+    'Shopping': 400.0,
+    'Transportation': 200.0,
+    'Entertainment': 300.0,
+    'Bills': 800.0,
+    'Other': 800.0,
+  };
+  final Map<String, double> _categorySpent = {
+    'Food': 420.0,
+    'Shopping': 320.0,
+    'Transportation': 180.0,
+    'Entertainment': 250.0,
+    'Bills': 480.0,
+    'Other': 200.0,
+  };
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final double remainingBudget = _monthlyBudget - _currentSpending;
+    final double progress = _currentSpending / _monthlyBudget;
+    final bool isOverBudget = _currentSpending > _monthlyBudget;
+    
+    // الحصول على أسماء الفئات المترجمة
+    final Map<String, String> translatedCategories = {
+      'Food': context.l10n.categoryFood,
+      'Shopping': context.l10n.categoryShopping,
+      'Transportation': context.l10n.categoryTransportation,
+      'Entertainment': context.l10n.categoryEntertainment,
+      'Bills': context.l10n.categoryBills,
+      'Other': context.l10n.categoryOther,
+    };
     
     return SafeArea(
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Profile Header
+            // Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-              child: Column(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                        width: 3,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.budget, // استخدام الترجمة
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.l10n.budgetOverview, // استخدام الترجمة
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.person,
-                      size: 50,
-                      color: isDarkMode ? Colors.white : Colors.black,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.edit,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        size: 20,
+                      ),
+                      onPressed: _showEditBudgetDialog,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'John Doe',
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
+                ],
+              ),
+            ),
+
+            // Monthly Budget Overview
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Budget Progress
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.monthlyBudget, // استخدام الترجمة هنا
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '\$$_monthlyBudget',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Progress Bar
+                  Stack(
+                    children: [
+                      Container(
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        height: 12,
+                        width: MediaQuery.of(context).size.width * 0.8 * progress.clamp(0.0, 1.0),
+                        decoration: BoxDecoration(
+                          color: isOverBudget ? Colors.red[800] : Colors.green[800],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Spending Stats
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.spent, // استخدام الترجمة
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            '\$${_currentSpending.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isOverBudget ? Colors.red[800] : Colors.green[800],
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            context.l10n.left, // استخدام الترجمة
+                            style: TextStyle(
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            '\$${remainingBudget.abs().toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: remainingBudget >= 0 ? Colors.green[800] : Colors.red[800],
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'john.doe@email.com',
+                    remainingBudget >= 0 
+                      ? context.l10n.underBudget // استخدام الترجمة
+                      : context.l10n.overBudget, // استخدام الترجمة
+                    style: TextStyle(
+                      color: remainingBudget >= 0 ? Colors.green[800] : Colors.red[800],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Category Budgets Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    context.l10n.categories, // استخدام الترجمة
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    context.l10n.monthlyBudget, // استخدام الترجمة
                     style: TextStyle(
                       color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       fontSize: 14,
@@ -1803,7 +2247,115 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
 
-            // Stats
+            const SizedBox(height: 12),
+
+            // Category Budgets List
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                ),
+              ),
+              child: Column(
+                children: _categoryBudgets.entries.map((entry) {
+                  final category = entry.key;
+                  final budget = entry.value;
+                  final spent = _categorySpent[category] ?? 0.0;
+                  final categoryProgress = spent / budget;
+                  final isCategoryOverBudget = spent > budget;
+                  final translatedCategory = translatedCategories[category] ?? category;
+                  
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(category).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(category),
+                          color: _getCategoryColor(category),
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        translatedCategory, // استخدام الاسم المترجم
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Stack(
+                            children: [
+                              Container(
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 500),
+                                height: 4,
+                                width: 60 * categoryProgress.clamp(0.0, 1.0),
+                                decoration: BoxDecoration(
+                                  color: isCategoryOverBudget ? Colors.red[800] : Colors.green[800],
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${spent.toStringAsFixed(0)} / \$${budget.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            isCategoryOverBudget 
+                              ? context.l10n.overBudget // استخدام الترجمة
+                              : '${(budget - spent).toStringAsFixed(0)} ${context.l10n.left}', // استخدام الترجمة
+                            style: TextStyle(
+                              color: isCategoryOverBudget ? Colors.red[800] : Colors.green[800],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Tips Card - تحديث النص ليستخدم الترجمة
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               padding: const EdgeInsets.all(20),
@@ -1815,64 +2367,44 @@ class ProfileTab extends StatelessWidget {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildProfileStat('Transactions', '156', isDarkMode),
-                  _buildProfileStat('Categories', '12', isDarkMode),
-                  _buildProfileStat('Balance', '\$12,500', isDarkMode),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Settings
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: Column(
-                children: [
-                  _buildSettingItem(
-                    'Account Settings',
-                    Icons.person_outline,
-                    isDarkMode,
-                    showTrailing: true,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.lightbulb_outline,
+                      color: Colors.blue[800],
+                      size: 20,
+                    ),
                   ),
-                  _buildSettingItem(
-                    'Notifications',
-                    Icons.notifications_outlined,
-                    isDarkMode,
-                    showTrailing: true,
-                  ),
-                  _buildSettingItem(
-                    'Security',
-                    Icons.lock_outline,
-                    isDarkMode,
-                    showTrailing: true,
-                  ),
-                  _buildSettingItem(
-                    'Help & Support',
-                    Icons.help_outline,
-                    isDarkMode,
-                    showTrailing: true,
-                  ),
-                  _buildSettingItem(
-                    'About',
-                    Icons.info_outline,
-                    isDarkMode,
-                    showTrailing: true,
-                  ),
-                  _buildSettingItem(
-                    'Log Out',
-                    Icons.logout,
-                    isDarkMode,
-                    isLogout: true,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.budget, // استخدام الترجمة
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isOverBudget 
+                            ? '${context.l10n.overBudget}. ${context.l10n.tryReducingExpenses}.' // يمكن إضافة نص إضافي للترجمة
+                            : '${context.l10n.underBudget}. ${context.l10n.considerSaving}.', // يمكن إضافة نص إضافي للترجمة
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1885,78 +2417,239 @@ class ProfileTab extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileStat(String label, String value, bool isDarkMode) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
-      ],
+  void _showEditBudgetDialog() {
+    final TextEditingController budgetController = TextEditingController(
+      text: _monthlyBudget.toStringAsFixed(0)
+    );
+    bool _isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.black : Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 4,
+                        width: 40,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Text(
+                              context.l10n.monthlyBudget, // استخدام الترجمة
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Budget Amount Field
+                            TextFormField(
+                              controller: budgetController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: context.l10n.monthlyBudget, // استخدام الترجمة
+                                labelStyle: TextStyle(
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.attach_money,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                                filled: true,
+                                fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 16,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return context.l10n.enterAmount; // استخدام الترجمة
+                                }
+                                if (double.tryParse(value) == null) {
+                                  return context.l10n.enterValidNumber; // استخدام الترجمة
+                                }
+                                if (double.parse(value) <= 0) {
+                                  return context.l10n.amountGreaterThanZero; // استخدام الترجمة
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 32),
+                            // Buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      context.l10n.cancel, // استخدام الترجمة
+                                      style: TextStyle(
+                                        color: isDarkMode ? Colors.white : Colors.black,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : () async {
+                                            if (budgetController.text.isEmpty) {
+                                              return;
+                                            }
+                                            
+                                            final budget = double.tryParse(budgetController.text);
+                                            if (budget == null || budget <= 0) {
+                                              return;
+                                            }
+                                            
+                                            setState(() {
+                                              _isSubmitting = true;
+                                            });
+                                            
+                                            await Future.delayed(const Duration(milliseconds: 500));
+                                            
+                                            setState(() {
+                                              _monthlyBudget = budget;
+                                            });
+                                            
+                                            Navigator.pop(context);
+                                            
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  '${context.l10n.budget} \$${budget.toStringAsFixed(2)}', // استخدام الترجمة
+                                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                                ),
+                                                backgroundColor: Colors.green,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: _isSubmitting
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            context.l10n.save, // استخدام الترجمة
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildSettingItem(String title, IconData icon, bool isDarkMode, {
-    bool showTrailing = false,
-    bool isLogout = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isLogout 
-              ? Colors.red.withOpacity(0.1)
-              : (isDarkMode ? Colors.grey[800] : Colors.grey[200]),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: isLogout ? Colors.red[800] : (isDarkMode ? Colors.white : Colors.black),
-            size: 20,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isLogout ? Colors.red[800] : (isDarkMode ? Colors.white : Colors.black),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        trailing: showTrailing
-            ? Icon(
-                Icons.chevron_right,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                size: 20,
-              )
-            : null,
-      ),
-    );
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Food':
+        return Colors.orange[800]!;
+      case 'Shopping':
+        return Colors.purple[800]!;
+      case 'Transportation':
+        return Colors.blue[800]!;
+      case 'Entertainment':
+        return Colors.pink[800]!;
+      case 'Bills':
+        return Colors.cyan[800]!;
+      default:
+        return Colors.grey[800]!;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Food':
+        return Icons.restaurant;
+      case 'Shopping':
+        return Icons.shopping_bag;
+      case 'Transportation':
+        return Icons.directions_car;
+      case 'Entertainment':
+        return Icons.movie;
+      case 'Bills':
+        return Icons.receipt;
+      default:
+        return Icons.category;
+    }
   }
 }
-
-// Enums
 enum TransactionType { all, income, expense }
 
 class TransactionFilter {
