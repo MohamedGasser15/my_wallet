@@ -619,13 +619,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get considerSaving => 'Consider saving 20% of your income.';
-
-  @override
-  String get addMoneyToWallet => 'Add Money to Wallet';
-
-  @override
-  String get recordExpense => 'Record Expense';
-
-  @override
-  String get deposit => 'Deposit';
 }

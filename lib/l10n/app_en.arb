@@ -200,11 +200,10 @@
   "categoryHealth": "Health",
   "categoryEducation": "Education",
   "categoryOther": "Other",
-    "setMonthlyBudget": "Set Monthly Budget",
+  "setMonthlyBudget": "Set Monthly Budget",
   "monthlyBudgetAmount": "Monthly Budget Amount",
   "budgetUpdated": "Budget updated to {amount}",
   "budgetTip": "Budget Tip",
   "tryReducingExpenses": "Try reducing entertainment and dining expenses.",
-  "considerSaving": "Consider saving 20% of your income.",
-  
+  "considerSaving": "Consider saving 20% of your income."
 }

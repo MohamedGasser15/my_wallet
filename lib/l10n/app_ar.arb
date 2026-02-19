@@ -200,10 +200,10 @@
   "categoryHealth": "الصحة",
   "categoryEducation": "التعليم",
   "categoryOther": "أخرى",
-    "setMonthlyBudget": "تعيين الميزانية الشهرية",
+  "setMonthlyBudget": "تعيين الميزانية الشهرية",
   "monthlyBudgetAmount": "مبلغ الميزانية الشهرية",
   "budgetUpdated": "تم تحديث الميزانية إلى {amount}",
   "budgetTip": "نصيحة مالية",
   "tryReducingExpenses": "حاول تقليل نفقات الترفيه وتناول الطعام خارج المنزل.",
-  "considerSaving": "فكر في توفير 20٪ من دخلك.",
+  "considerSaving": "فكر في توفير 20٪ من دخلك."
 }

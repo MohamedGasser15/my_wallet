@@ -618,13 +618,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get considerSaving => 'فكر في توفير 20٪ من دخلك.';
-
-  @override
-  String get addMoneyToWallet => 'إضافة أموال إلى المحفظة';
-
-  @override
-  String get recordExpense => 'تسجيل مصروف';
-
-  @override
-  String get deposit => 'إيداع';
 }

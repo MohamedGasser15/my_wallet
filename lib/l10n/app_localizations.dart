@@ -1279,24 +1279,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Consider saving 20% of your income.'**
   String get considerSaving;
-
-  /// No description provided for @addMoneyToWallet.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Money to Wallet'**
-  String get addMoneyToWallet;
-
-  /// No description provided for @recordExpense.
-  ///
-  /// In en, this message translates to:
-  /// **'Record Expense'**
-  String get recordExpense;
-
-  /// No description provided for @deposit.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit'**
-  String get deposit;
 }
 
 class _AppLocalizationsDelegate
