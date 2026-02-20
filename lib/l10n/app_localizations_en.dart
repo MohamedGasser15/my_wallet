@@ -619,4 +619,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get considerSaving => 'Consider saving 20% of your income.';
+
+  @override
+  String get failed => 'failed';
+
+  @override
+  String get incorrectPin => 'Incorrect PIN';
+
+  @override
+  String get forgotPin => 'Forgot PIN?';
+
+  @override
+  String get forgotPinDescription =>
+      'We\'ll send a new verification code to your email to reset your PIN.';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get enterPin => 'Enter PIN';
+
+  @override
+  String get enterPinDescription =>
+      'Enter your 6-digit PIN to access your wallet';
+
+  @override
+  String get codeVerifiedSuccess => 'Verified successfully! Redirecting...';
+
+  @override
+  String get pasteCode => 'Paste code';
+
+  @override
+  String get invalidCodePasted => 'Invalid pasted code, please enter 6 digits';
+
+  @override
+  String get codeResent => 'Code resent';
+
+  @override
+  String get loginSuccess => 'Login successful!';
+
+  @override
+  String get forgot => 'Forgot?';
 }

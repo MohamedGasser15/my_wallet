@@ -1,6 +1,6 @@
-// features/auth/presentation/screens/pin_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/services/biometric_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/auth/presentation/widgets/biometric_bottom_sheet.dart';
@@ -9,157 +9,137 @@ import 'package:my_wallet/features/home/presentation/screens/HomeScreen.dart';
 class PinScreen extends StatefulWidget {
   final bool isFirstTime;
   final bool showBiometricFirst;
-  
+
   const PinScreen({
-    super.key, 
+    super.key,
     this.isFirstTime = false,
     this.showBiometricFirst = true,
   });
-  
+
   @override
   State<PinScreen> createState() => _PinScreenState();
 }
 
-class _PinScreenState extends State<PinScreen> {
-  final List<String> _pinDigits = [];
+class _PinScreenState extends State<PinScreen>
+    with SingleTickerProviderStateMixin {
+  final List<int> _pinDigits = [];
   bool _isLoading = false;
   bool _showError = false;
   String? _errorMessage;
   Timer? _errorTimer;
-  bool _biometricFailed = false;
-  String _biometricName = 'Face ID';
+
+  // Biometric data
   bool _biometricEnabled = false;
   bool _hasBiometricSupport = false;
+  String _biometricName = 'Biometric';
+  bool _biometricFailed = false;
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadBiometricData();
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
     _errorTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
   Future<void> _loadBiometricData() async {
     final name = await BiometricService.getBiometricName();
-    final isEnabled = await BiometricService.isBiometricEnabled();
-    final hasSupport = await BiometricService.hasBiometricSupport();
-    
+    final enabled = await BiometricService.isBiometricEnabled();
+    final supported = await BiometricService.hasBiometricSupport();
+
     setState(() {
       _biometricName = name;
-      _biometricEnabled = isEnabled;
-      _hasBiometricSupport = hasSupport;
+      _biometricEnabled = enabled;
+      _hasBiometricSupport = supported;
     });
 
-    // إذا كان البايومتريك مفعل وعنده دعم، جرب المصادقة مباشرة
-    if (_biometricEnabled && 
-        _hasBiometricSupport && 
+    if (_biometricEnabled &&
+        _hasBiometricSupport &&
         !widget.isFirstTime &&
         widget.showBiometricFirst &&
         !_biometricFailed) {
-      
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      final authenticated = await BiometricService.authenticate();
-      
-      if (authenticated) {
-        _navigateToHome();
-        return;
-      } else {
-        // إذا فشلت مصادقة البايومتريك، نعلم المستخدم وننتظر الـ PIN
-        setState(() {
-          _biometricFailed = true;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$_biometricName authentication failed. Please use PIN'),
-            duration: const Duration(seconds: 3),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      await Future.delayed(const Duration(milliseconds: 300));
+      _authenticateWithBiometric();
     }
   }
 
-  Future<void> _navigateToHome() async {
+  Future<void> _authenticateWithBiometric() async {
+    final success = await BiometricService.authenticate();
+    if (success) {
+      _navigateToHome();
+    } else {
+      setState(() => _biometricFailed = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_biometricName} ${context.l10n.failed}'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _navigateToHome() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
-  void _addDigit(String digit) {
+  void _addDigit(int digit) {
     if (_pinDigits.length < 6 && !_isLoading) {
       setState(() {
         _pinDigits.add(digit);
         _showError = false;
         _errorMessage = null;
-        _biometricFailed = false; // Reset biometric failed state
       });
-
-      if (_pinDigits.length == 6) {
-        _verifyPin();
-      }
+      if (_pinDigits.length == 6) _verifyPin();
     }
   }
 
   void _removeDigit() {
     if (_pinDigits.isNotEmpty && !_isLoading) {
-      setState(() {
-        _pinDigits.removeLast();
-        _showError = false;
-        _errorMessage = null;
-      });
+      setState(() => _pinDigits.removeLast());
     }
   }
 
   void _clearPin() {
-    if (!_isLoading) {
-      setState(() {
-        _pinDigits.clear();
-        _showError = false;
-        _errorMessage = null;
-      });
-    }
+    if (!_isLoading) setState(() => _pinDigits.clear());
   }
 
   Future<void> _verifyPin() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    // محاكاة التحقق من PIN
-    await Future.delayed(const Duration(milliseconds: 500));
+    // محاكاة تحقق (يتم استبدالها بالتحقق الفعلي)
+    await Future.delayed(const Duration(milliseconds: 600));
+    final stored = await SharedPrefs.getStringValue('user_password');
+    final entered = _pinDigits.join();
 
-    // في التطبيق الحقيقي، هنا نتحقق من السيرفر
-    final storedPassword = await SharedPrefs.getStringValue('user_password');
-    final enteredPin = _pinDigits.join();
-
-    if (storedPassword == enteredPin) {
-      // PIN صحيح
-      setState(() {
-        _isLoading = false;
-      });
-
-      // التحقق من إمكانية استخدام البايومتريك
-      if (_hasBiometricSupport && !_biometricEnabled && !widget.isFirstTime) {
-        // عرض الـ Bottom Sheet لتفعيل البايومتريك
-        _showBiometricBottomSheet();
-      } else {
-        _navigateToHome();
-      }
+    if (stored == entered) {
+      setState(() => _isLoading = false);
+      _handleSuccess();
     } else {
-      // PIN خطأ
       setState(() {
         _isLoading = false;
         _showError = true;
-        _errorMessage = 'Incorrect PIN';
+        _errorMessage = context.l10n.incorrectPin;
       });
-
       _errorTimer?.cancel();
       _errorTimer = Timer(const Duration(seconds: 2), () {
         if (mounted) {
@@ -173,345 +153,289 @@ class _PinScreenState extends State<PinScreen> {
     }
   }
 
+  void _handleSuccess() {
+    if (_hasBiometricSupport && !_biometricEnabled && !widget.isFirstTime) {
+      _showBiometricBottomSheet();
+    } else {
+      _navigateToHome();
+    }
+  }
+
   void _showBiometricBottomSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => BiometricBottomSheet(biometricName: _biometricName),
-    ).then((value) {
-      if (value == true) {
-        _navigateToHome();
-      }
+      builder: (_) => BiometricBottomSheet(biometricName: _biometricName),
+    ).then((enabled) {
+      if (enabled == true) _navigateToHome();
     });
-  }
-
-  Future<void> _tryBiometricAgain() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
-    final authenticated = await BiometricService.authenticate();
-    
-    setState(() {
-      _isLoading = false;
-    });
-    
-    if (authenticated) {
-      _navigateToHome();
-    } else {
-      setState(() {
-        _biometricFailed = true;
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$_biometricName authentication failed'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
   void _onForgotPin() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Forgot PIN?'),
-        content: const Text('You will need to reset your PIN through email verification.'),
+        title: Text(context.l10n.forgotPin),
+        content: Text(context.l10n.forgotPinDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Navigate to reset PIN flow
+              // التوجيه إلى استعادة الرمز عبر البريد
+              // يمكن إضافة شاشة استعادة هنا
             },
-            child: const Text('Reset PIN'),
+            child: Text(context.l10n.reset),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPinDots() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 40, top: 20),
-      height: 24,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(6, (index) {
-          final isFilled = index < _pinDigits.length;
-          
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _showError 
-                  ? Colors.red
-                  : (isFilled 
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.15)),
-              border: !isFilled ? Border.all(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                width: 1.0,
-              ) : null,
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildNumericKeypad() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-      child: Column(
-        children: [
-          // الصف الأول: 1 2 3
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNumberButton('1'),
-              _buildNumberButton('2'),
-              _buildNumberButton('3'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الثاني: 4 5 6
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNumberButton('4'),
-              _buildNumberButton('5'),
-              _buildNumberButton('6'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الثالث: 7 8 9
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNumberButton('7'),
-              _buildNumberButton('8'),
-              _buildNumberButton('9'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الرابع: Forget - 0 - Delete/Biometric
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Forget على اليسار
-              Container(
-                width: 80,
-                height: 80,
-                alignment: Alignment.center,
-                child: TextButton(
-                  onPressed: _onForgotPin,
-                  child: Text(
-                    'Forget?',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-              
-              // الرقم 0 في المنتصف
-              _buildNumberButton('0'),
-              
-              // زر الحذف أو البايومتريك على اليمين
-              // إذا كان PIN فارغ ولم يفشل البايومتريك وكان البايومتريك مفعل، نعرض زر البايومتريك
-              // إذا كان فيه أرقام أو البايومتريك غير مفعل، نعرض زر الحذف
-              _pinDigits.isEmpty && !_biometricFailed && _biometricEnabled
-                  ? _buildBiometricButton()
-                  : _buildDeleteButton(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNumberButton(String digit) {
-    return GestureDetector(
-      onTap: () => _addDigit(digit),
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Theme.of(context).colorScheme.surface,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            digit,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w300,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeleteButton() {
-    return GestureDetector(
-      onTap: _removeDigit,
-      onLongPress: _clearPin,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.transparent,
-        ),
-        child: Center(
-          child: Icon(
-            Icons.backspace_outlined,
-            size: 28,
-            color: _pinDigits.isNotEmpty && !_isLoading
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBiometricButton() {
-    // اختيار الأيقونة المناسبة بناءً على نوع البايومتريك
-    IconData iconData;
-    if (_biometricName.toLowerCase().contains('face')) {
-      iconData = Icons.face; // أيقونة Face ID
-    } else if (_biometricName.toLowerCase().contains('finger')) {
-      iconData = Icons.fingerprint; // أيقونة Fingerprint
-    } else {
-      iconData = Icons.security; // أيقونة افتراضية
-    }
-
-    return GestureDetector(
-      onTap: _tryBiometricAgain,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.transparent,
-        ),
-        child: Center(
-          child: Icon(
-            iconData,
-            size: 32,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Column(
           children: [
-            // المحتوى الرئيسي - بدون AppBar
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.account_balance_wallet,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.primary,
+                  // الشعار مع نبض خفيف
+                  ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withOpacity(0.7),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.account_balance_wallet,
+                        size: 45,
+                        color: theme.colorScheme.onPrimary,
+                      ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Title
+                  const SizedBox(height: 24),
                   Text(
-                    'Enter PIN',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    context.l10n.enterPin,
+                    style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Subtitle
+                  const SizedBox(height: 8),
                   Text(
-                    'Enter your 6-digit PIN to access your wallet',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+                    context.l10n.enterPinDescription,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onBackground.withOpacity(0.6),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // PIN Dots
-                  _buildPinDots(),
-                  
-                  // Error Message
-                  if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  const SizedBox(height: 40),
+
+                  // نقاط PIN
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (index) {
+                      final isFilled = index < _pinDigits.length;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _showError
+                              ? Colors.red
+                              : isFilled
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface.withOpacity(0.15),
+                          border: !isFilled
+                              ? Border.all(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.3),
+                                  width: 1.5,
+                                )
+                              : null,
                         ),
-                      ),
+                      );
+                    }),
+                  ),
+
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
                     ),
-                  
-                  // Loading Indicator
-                  if (_isLoading)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 20),
-                      child: CircularProgressIndicator(),
-                    ),
+                  ],
+
+                  if (_isLoading) ...[
+                    const SizedBox(height: 24),
+                    const CircularProgressIndicator(),
+                  ],
                 ],
               ),
             ),
-            
-            // لوحة المفاتيح الرقمية
-            _buildNumericKeypad(),
-            
-            const SizedBox(height: 20),
+
+            // لوحة المفاتيح
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  _buildKeyRow(['1', '2', '3']),
+                  const SizedBox(height: 12),
+                  _buildKeyRow(['4', '5', '6']),
+                  const SizedBox(height: 12),
+                  _buildKeyRow(['7', '8', '9']),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Forget
+                      _buildFunctionButton(
+                        icon: Icons.help_outline,
+                        onTap: _onForgotPin,
+                        label: context.l10n.forgot,
+                      ),
+                      // 0
+                      _buildNumberButton('0'),
+                      // Delete / Biometric
+                      _pinDigits.isEmpty && !_biometricFailed && _biometricEnabled
+                          ? _buildBiometricButton()
+                          : _buildFunctionButton(
+                              icon: _pinDigits.isEmpty
+                                  ? Icons.backspace_outlined
+                                  : Icons.backspace,
+                              onTap: _removeDigit,
+                              onLongPress: _clearPin,
+                              isActive: _pinDigits.isNotEmpty,
+                            ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKeyRow(List<String> digits) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: digits.map((d) => _buildNumberButton(d)).toList(),
+    );
+  }
+
+  Widget _buildNumberButton(String digit) {
+    return GestureDetector(
+      onTap: () => _addDigit(int.parse(digit)),
+      child: Container(
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).colorScheme.surface,
+          border: Border.all(
+            color: Theme.of(context).dividerColor.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            digit,
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFunctionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+    bool isActive = true,
+    String? label,
+  }) {
+    return GestureDetector(
+      onTap: isActive ? onTap : null,
+      onLongPress: onLongPress,
+      child: Container(
+        width: 70,
+        height: 70,
+        decoration: const BoxDecoration(shape: BoxShape.circle),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 28,
+              color: isActive
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+            if (label != null)
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isActive ? Colors.blue : Colors.grey,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBiometricButton() {
+    IconData icon;
+    if (_biometricName.toLowerCase().contains('face')) {
+      icon = Icons.face;
+    } else if (_biometricName.toLowerCase().contains('finger')) {
+      icon = Icons.fingerprint;
+    } else {
+      icon = Icons.security;
+    }
+
+    return GestureDetector(
+      onTap: _authenticateWithBiometric,
+      child: Container(
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        ),
+        child: Icon(
+          icon,
+          size: 32,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );

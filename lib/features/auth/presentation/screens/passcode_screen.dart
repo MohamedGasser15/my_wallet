@@ -1,7 +1,6 @@
-// features/auth/presentation/screens/passcode_screen.dart
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
@@ -23,174 +22,47 @@ class PasscodeScreen extends StatefulWidget {
   State<PasscodeScreen> createState() => _PasscodeScreenState();
 }
 
-class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProviderStateMixin {
+class _PasscodeScreenState extends State<PasscodeScreen> with TickerProviderStateMixin {
   final AuthRepository _authRepository = AuthRepository();
   final List<String> _passcode = [];
+  final int _passcodeLength = 6;
   
   bool _isLoading = false;
-  bool _isSubmitting = false;
   bool _showError = false;
-  Timer? _waveTimer;
-  Timer? _errorTimer;
+  String? _errorMessage;
   Timer? _resetTimer;
   
-  // Wave animation variables
-  final List<double> _dotHeights = List.generate(6, (index) => 0.0);
-  final List<Color> _dotColors = List.generate(6, (index) => Colors.transparent);
-  final List<double> _dotScales = List.generate(6, (index) => 1.0);
-  double _wavePosition = 0.0;
-  bool _isWaving = false;
-  
-  // Vibration animation
-  late AnimationController _vibrateController;
-  late Animation<double> _vibrateAnimation;
-  bool _isVibrating = false;
+  // Animation for dots
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
   
   @override
   void initState() {
     super.initState();
     
-    // Initialize vibration animation
-    _vibrateController = AnimationController(
-      duration: const Duration(milliseconds: 100),
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
     
-    _vibrateAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 10.0), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: 10.0, end: 0.0), weight: 1),
-    ]).animate(_vibrateController);
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 10.0, end: -10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -10.0, end: 5.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 5.0, end: -5.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -5.0, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut));
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).unfocus();
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
     });
   }
   
   @override
   void dispose() {
-    _waveTimer?.cancel();
-    _errorTimer?.cancel();
+    _shakeController.dispose();
     _resetTimer?.cancel();
-    _vibrateController.dispose();
     super.dispose();
-  }
-  
-  void _startWaveAnimation() {
-    _waveTimer?.cancel();
-    _isWaving = true;
-    
-    _waveTimer = Timer.periodic(const Duration(milliseconds: 60), (timer) {
-      if (!mounted) return;
-      
-      setState(() {
-        _wavePosition += 0.15;
-        
-        // Create smooth horizontal wave effect
-        for (int i = 0; i < 6; i++) {
-          // Each dot has a phase offset for wave effect
-          double phaseOffset = i * 0.8; // Adjust for wave steepness
-          double waveValue = sin(_wavePosition - phaseOffset);
-          
-          // Normalize wave value to [0, 1] range
-          double normalizedValue = (waveValue + 1) / 2;
-          
-          // Set dot height (vertical movement)
-          _dotHeights[i] = normalizedValue * 18; // Max 18px movement
-          
-          // Set dot scale (size change)
-          _dotScales[i] = 1.0 + (normalizedValue * 0.25); // Scale from 1.0 to 1.25
-        }
-      });
-    });
-  }
-  
-  void _stopWaveAnimation() {
-    _waveTimer?.cancel();
-    _isWaving = false;
-    
-    // Smoothly reset dots to normal position
-    for (int i = 0; i < 6; i++) {
-      Future.delayed(Duration(milliseconds: i * 50), () {
-        if (mounted) {
-          setState(() {
-            _dotHeights[i] = 0.0;
-            _dotScales[i] = 1.0;
-          });
-        }
-      });
-    }
-    
-    setState(() {
-      _wavePosition = 0.0;
-    });
-  }
-  
-  void _triggerVibration() async {
-    if (_isVibrating) return;
-    
-    _isVibrating = true;
-    
-    // Start vibration animation
-    for (int i = 0; i < 5; i++) { // Vibrate 5 times
-      await _vibrateController.forward();
-      await _vibrateController.reverse();
-      await Future.delayed(const Duration(milliseconds: 50));
-    }
-    
-    _isVibrating = false;
-  }
-  
-  void _showErrorState() {
-    // Change dots to red
-    setState(() {
-      for (int i = 0; i < _passcode.length; i++) {
-        _dotColors[i] = Colors.red;
-      }
-      _showError = true;
-    });
-    
-    // Trigger vibration
-    _triggerVibration();
-    
-    // Stop wave animation
-    _stopWaveAnimation();
-    
-    // Reset after 2 seconds
-    _resetTimer?.cancel();
-    _resetTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      
-      // Smoothly reset dots to normal
-      for (int i = 0; i < 6; i++) {
-        Future.delayed(Duration(milliseconds: i * 40), () {
-          if (mounted) {
-            setState(() {
-              _dotColors[i] = Colors.transparent;
-              _dotHeights[i] = 0.0;
-              _dotScales[i] = 1.0;
-            });
-          }
-        });
-      }
-      
-      setState(() {
-        _passcode.clear();
-        _showError = false;
-        _isLoading = false;
-        _isSubmitting = false;
-      });
-    });
-  }
-  
-  void _showSuccessState() {
-    // Keep wave animation for 2 seconds
-    _errorTimer?.cancel();
-    _errorTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      
-      // Navigate after 2 seconds
-      Navigator.pushReplacementNamed(context, '/home');
-    });
   }
   
   void _onBackPressed() {
@@ -202,12 +74,16 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
   }
   
   void _addDigit(String digit) {
-    if (_passcode.length < 6 && !_isLoading && !_showError) {
+    if (_passcode.length < _passcodeLength && !_isLoading && !_showError) {
       setState(() {
         _passcode.add(digit);
+        _errorMessage = null;
       });
       
-      if (_passcode.length == 6) {
+      // Haptic feedback
+      HapticFeedback.lightImpact();
+      
+      if (_passcode.length == _passcodeLength) {
         _completeProcess();
       }
     }
@@ -217,7 +93,9 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     if (_passcode.isNotEmpty && !_isLoading && !_showError) {
       setState(() {
         _passcode.removeLast();
+        _errorMessage = null;
       });
+      HapticFeedback.selectionClick();
     }
   }
   
@@ -225,176 +103,239 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     if (!_isLoading && !_showError) {
       setState(() {
         _passcode.clear();
+        _errorMessage = null;
       });
     }
   }
   
   Future<void> _completeProcess() async {
-  setState(() {
-    _isLoading = true;
-    _isSubmitting = true;
-  });
-
-  // Start wave animation
-  _startWaveAnimation();
-
-  String passcode = _passcode.join();
-
-  try {
-    if (widget.isLogin) {
-      final result = await _authRepository.completeLogin(
-        email: widget.email,
-        verificationCode: widget.verificationCode,
-        password: passcode,
-      );
-
-      if (result['success'] == true) {
-        // Save passcode locally
-        await SharedPrefs.setString('user_password', passcode);
-
-        // Show success state for 2 seconds
-        _showSuccessState();
-      } else {
-        _showErrorState();
-      }
-    } else {
-      // Save passcode locally before navigating to register
-      await SharedPrefs.setString('user_password', passcode);
-
-      Navigator.pushNamed(
-        context,
-        '/register',
-        arguments: {
-          'email': widget.email,
-          'verificationCode': widget.verificationCode,
-          'passcode': passcode,
-        },
-      );
-    }
-  } catch (e) {
-    _showErrorState();
-  } finally {
     setState(() {
-      _isLoading = false;
-      _isSubmitting = false;
+      _isLoading = true;
+      _showError = false;
+      _errorMessage = null;
+    });
+    
+    String passcode = _passcode.join();
+    
+    try {
+      if (widget.isLogin) {
+        final result = await _authRepository.completeLogin(
+          email: widget.email,
+          verificationCode: widget.verificationCode,
+          password: passcode,
+        );
+        
+        if (result['success'] == true) {
+          await SharedPrefs.setString('user_password', passcode);
+          _navigateToHome();
+        } else {
+          _showErrorState('Invalid passcode');
+        }
+      } else {
+        // Save passcode locally before navigating to register
+        await SharedPrefs.setString('user_password', passcode);
+        Navigator.pushNamed(
+          context,
+          '/register',
+          arguments: {
+            'email': widget.email,
+            'verificationCode': widget.verificationCode,
+            'passcode': passcode,
+          },
+        );
+      }
+    } catch (e) {
+      _showErrorState('An error occurred');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  
+  void _showErrorState(String message) {
+    setState(() {
+      _showError = true;
+      _errorMessage = message;
+    });
+    
+    // Shake animation
+    _shakeController.forward(from: 0.0);
+    
+    // Clear after delay
+    _resetTimer?.cancel();
+    _resetTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _passcode.clear();
+          _showError = false;
+          _errorMessage = null;
+        });
+      }
     });
   }
-}
+  
+  void _navigateToHome() {
+    Navigator.pushReplacementNamed(context, '/home');
+  }
   
   void _onForgotPasscode() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Passcode'),
-        content: const Text('A new verification code will be sent to your email.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildForgotPasscodeSheet(),
+    );
+  }
+  
+  Widget _buildForgotPasscodeSheet() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.background,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              setState(() {
-                _isLoading = true;
-              });
-              
-              try {
-                await _authRepository.sendVerification(widget.email, widget.isLogin);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('New code sent to ${widget.email}'),
-                    backgroundColor: Colors.green,
+          const SizedBox(height: 24),
+          Icon(
+            Icons.lock_reset,
+            size: 60,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Reset Passcode',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'A new verification code will be sent to your email.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to send code: ${e.toString()}'),
-                    backgroundColor: Colors.red,
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    setState(() => _isLoading = true);
+                    
+                    try {
+                      await _authRepository.sendVerification(widget.email, widget.isLogin);
+                      _showSuccessSnackBar('New code sent to ${widget.email}');
+                    } catch (e) {
+                      _showErrorSnackBar('Failed to send code');
+                    } finally {
+                      setState(() => _isLoading = false);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                );
-              } finally {
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            },
-            child: const Text('Send'),
+                  child: const Text('Send'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
   
-  // لوحة المفاتيح المخصصة
-  Widget _buildCustomKeyboard() {
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+  
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+  
+  // بناء لوحة المفاتيح
+  Widget _buildKeyboard() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Column(
         children: [
-          // الصف الأول: 1 2 3
+          // الصفوف 1-2-3
+          _buildRow(['1', '2', '3']),
+          const SizedBox(height: 16),
+          _buildRow(['4', '5', '6']),
+          const SizedBox(height: 16),
+          _buildRow(['7', '8', '9']),
+          const SizedBox(height: 16),
+          // الصف الأخير: نص (Forget) - 0 - زر حذف
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildKey('1'),
-              _buildKey('2'),
-              _buildKey('3'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الثاني: 4 5 6
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildKey('4'),
-              _buildKey('5'),
-              _buildKey('6'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الثالث: 7 8 9
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildKey('7'),
-              _buildKey('8'),
-              _buildKey('9'),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // الصف الرابع: Forget - 0 - Delete
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Forget على اليسار
-              Container(
-                width: 80,
-                height: 80,
-                alignment: Alignment.center,
-                child: widget.isLogin
-                    ? GestureDetector(
-                        onTap: _onForgotPasscode,
-                        child: Text(
-                          context.l10n.forgotPasscode,
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
+              // Forget (يظهر فقط في حالة login)
+              widget.isLogin
+                  ? _buildTextButton('Forget?', onTap: _onForgotPasscode)
+                  : const SizedBox(width: 80),
               
-              // الرقم 0 في المنتصف
-              _buildKey('0'),
+              _buildNumberButton('0'),
               
-              // زر الحذف على اليمين
-              _buildDeleteKey(),
+              _buildDeleteButton(),
             ],
           ),
         ],
@@ -402,27 +343,36 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     );
   }
   
-  // زر الرقم
-  Widget _buildKey(String digit) {
-    return AnimatedButton(
+  Widget _buildRow(List<String> digits) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: digits.map((digit) => _buildNumberButton(digit)).toList(),
+    );
+  }
+  
+  Widget _buildNumberButton(String digit) {
+    return _KeyboardButton(
       onTap: () => _addDigit(digit),
       child: Container(
-        width: 80,
-        height: 80,
+        width: 70,
+        height: 70,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Theme.of(context).colorScheme.surface,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            width: 1,
-          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Center(
           child: Text(
             digit,
             style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w300,
+              fontSize: 28,
+              fontWeight: FontWeight.w400,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
@@ -431,14 +381,13 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     );
   }
   
-  // زر الحذف
-  Widget _buildDeleteKey() {
-    return AnimatedButton(
+  Widget _buildDeleteButton() {
+    return _KeyboardButton(
       onTap: _removeDigit,
       onLongPress: _clearPasscode,
       child: Container(
-        width: 80,
-        height: 80,
+        width: 70,
+        height: 70,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.transparent,
@@ -447,7 +396,7 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
           child: Icon(
             Icons.backspace_outlined,
             size: 28,
-            color: _passcode.isNotEmpty && !_isLoading && !_showError
+            color: _passcode.isNotEmpty && !_isLoading
                 ? Theme.of(context).colorScheme.onSurface
                 : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           ),
@@ -456,62 +405,67 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
     );
   }
   
-  // عرض نقاط الباسكود مع Wave Loading Animation
-  Widget _buildPasscodeDots() {
+  Widget _buildTextButton(String text, {required VoidCallback onTap}) {
+    return _KeyboardButton(
+      onTap: onTap,
+      child: Container(
+        width: 70,
+        height: 70,
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: TextStyle(
+            color: Colors.blue,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // بناء النقاط
+  Widget _buildPasscodeIndicators() {
     return AnimatedBuilder(
-      animation: _vibrateAnimation,
+      animation: _shakeAnimation,
       builder: (context, child) {
-        double vibrateOffset = _isVibrating ? _vibrateAnimation.value : 0.0;
-        
         return Transform.translate(
-          offset: Offset(vibrateOffset, 0),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 60, top: 20),
-            height: 40,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(6, (index) {
-                final isFilled = index < _passcode.length;
-                final dotColor = _dotColors[index];
-                final verticalOffset = _dotHeights[index];
-                final dotScale = _dotScales[index];
-                
-                // Calculate dot size with wave effect
-                double baseSize = 16;
-                double animatedSize = baseSize * dotScale;
-                
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  curve: Curves.easeOut,
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  width: animatedSize,
-                  height: animatedSize,
-                  transform: Matrix4.translationValues(0, -verticalOffset, 0)
-                    ..scale(dotScale),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: dotColor != Colors.transparent 
-                        ? dotColor 
-                        : (isFilled 
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.15)),
-                    border: !isFilled ? Border.all(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                      width: 1.0,
-                    ) : null,
-                    boxShadow: isFilled && _isWaving && verticalOffset > 8
-                        ? [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            )
-                          ]
-                        : null,
-                  ),
-                );
-              }),
-            ),
+          offset: Offset(_showError ? _shakeAnimation.value : 0, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_passcodeLength, (index) {
+              final isFilled = index < _passcode.length;
+              final isError = _showError && isFilled;
+              
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isError
+                      ? Colors.red
+                      : isFilled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  border: !isFilled
+                      ? Border.all(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                          width: 1.5,
+                        )
+                      : null,
+                  boxShadow: isFilled && !isError
+                      ? [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          )
+                        ]
+                      : null,
+                ),
+              );
+            }),
           ),
         );
       },
@@ -521,9 +475,10 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final isRTL = Directionality.of(context) == TextDirection.rtl;
+    final theme = Theme.of(context);
     
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -534,7 +489,6 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
           ),
           onPressed: _onBackPressed,
         ),
-        title: null,
       ),
       body: SafeArea(
         child: Column(
@@ -543,45 +497,83 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
+                    
+                    // Icon
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        widget.isLogin ? Icons.lock_outline : Icons.lock_reset,
+                        size: 40,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
                     
                     // Title
                     Text(
                       widget.isLogin ? context.l10n.enterYourPasscode : context.l10n.setPasscodeTitle,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     
                     const SizedBox(height: 12),
                     
-                    // Subtitle for register
-                    if (!widget.isLogin) ...[
+                    // Subtitle
+                    if (!widget.isLogin)
                       Text(
                         context.l10n.setPasscodeDescription,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
-                          height: 1.5,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onBackground.withOpacity(0.6),
                         ),
                       ),
-                      const SizedBox(height: 40),
-                    ] else
-                      const SizedBox(height: 40),
                     
-                    // Wave Loading Dots
-                    _buildPasscodeDots(),
+                    const SizedBox(height: 48),
+                    
+                    // Passcode indicators
+                    _buildPasscodeIndicators(),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Error message
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 20),
+                        child: CircularProgressIndicator(),
+                      ),
                   ],
                 ),
               ),
             ),
             
             // Custom Keyboard
-            _buildCustomKeyboard(),
-            
-            // مسافة من الأسفل
-            const SizedBox(height: 20),
+            _buildKeyboard(),
           ],
         ),
       ),
@@ -589,60 +581,39 @@ class _PasscodeScreenState extends State<PasscodeScreen> with SingleTickerProvid
   }
 }
 
-// Widget مخصص للزر مع animation
-class AnimatedButton extends StatefulWidget {
+// زر مخصص مع تأثير اللمس
+class _KeyboardButton extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final Widget child;
   
-  const AnimatedButton({
-    super.key,
+  const _KeyboardButton({
     required this.onTap,
     this.onLongPress,
     required this.child,
   });
   
   @override
-  State<AnimatedButton> createState() => _AnimatedButtonState();
+  State<_KeyboardButton> createState() => __KeyboardButtonState();
 }
 
-class _AnimatedButtonState extends State<AnimatedButton> {
+class __KeyboardButtonState extends State<_KeyboardButton> {
   bool _isPressed = false;
   
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _isPressed = true;
-        });
-      },
+      onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
-        setState(() {
-          _isPressed = false;
-        });
+        setState(() => _isPressed = false);
         widget.onTap();
       },
-      onTapCancel: () {
-        setState(() {
-          _isPressed = false;
-        });
-      },
+      onTapCancel: () => setState(() => _isPressed = false),
       onLongPress: widget.onLongPress,
       child: AnimatedScale(
         duration: const Duration(milliseconds: 100),
         scale: _isPressed ? 0.9 : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _isPressed
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                : Colors.transparent,
-          ),
-          child: widget.child,
-        ),
+        child: widget.child,
       ),
     );
   }

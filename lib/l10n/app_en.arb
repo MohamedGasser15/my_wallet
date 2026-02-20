@@ -205,5 +205,18 @@
   "budgetUpdated": "Budget updated to {amount}",
   "budgetTip": "Budget Tip",
   "tryReducingExpenses": "Try reducing entertainment and dining expenses.",
-  "considerSaving": "Consider saving 20% of your income."
+  "considerSaving": "Consider saving 20% of your income.",
+    "failed": "failed",
+  "incorrectPin": "Incorrect PIN",
+  "forgotPin": "Forgot PIN?",
+  "forgotPinDescription": "We'll send a new verification code to your email to reset your PIN.",
+  "reset": "Reset",
+  "enterPin": "Enter PIN",
+  "enterPinDescription": "Enter your 6-digit PIN to access your wallet",
+  "codeVerifiedSuccess": "Verified successfully! Redirecting...",
+  "pasteCode": "Paste code",
+  "invalidCodePasted": "Invalid pasted code, please enter 6 digits",
+  "codeResent": "Code resent",
+  "loginSuccess": "Login successful!",
+  "forgot": "Forgot?"
 }

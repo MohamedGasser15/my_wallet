@@ -16,52 +16,110 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> 
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _animation;
+  
+  // Animations for different elements
+  late Animation<double> _logoScale;
+  late Animation<double> _logoRotation;
+  late Animation<double> _logoFade;
+  late Animation<Offset> _titleSlide;
+  late Animation<double> _titleFade;
+  late Animation<Offset> _subtitleSlide;
+  late Animation<double> _subtitleFade;
   
   @override
   void initState() {
     super.initState();
-    _initAnimation();
+    _initAnimations();
     _checkAuthStatus();
   }
   
-  void _initAnimation() {
+  void _initAnimations() {
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
     
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
+    // Logo animations (0.0 - 0.6)
+    _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.elasticOut),
+      ),
+    );
+    
+    _logoRotation = Tween<double>(begin: -0.5, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+      ),
+    );
+    
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+      ),
+    );
+    
+    // Title animations (0.3 - 0.8)
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
+      ),
+    );
+    
+    _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.6, curve: Curves.easeIn),
+      ),
+    );
+    
+    // Subtitle animations (0.5 - 1.0)
+    _subtitleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 0.9, curve: Curves.easeOut),
+      ),
+    );
+    
+    _subtitleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 0.8, curve: Curves.easeIn),
+      ),
     );
     
     _controller.forward();
   }
   
-// في splash_screen.dart، عدل _checkAuthStatus:
-Future<void> _checkAuthStatus() async {
-  await SharedPrefs.init();
-
-  // Simulate loading time
-  await Future.delayed(const Duration(seconds: 2));
-
-  final token = SharedPrefs.authToken;
-
-  if (token == null || token.isEmpty) {
-    // ❗ مفيش تسجيل → Onboarding
-    _navigateToOnboarding();
-  } else {
-    // ✅ مسجل دخول - ننتقل لشاشة PIN مع إظهار البايومتريك أولاً
-    Navigator.of(context).pushReplacementNamed(
-      '/pin',
-      arguments: {
-        'isFirstTime': false,
-        'showBiometricFirst': true,
-      },
-    );
+  Future<void> _checkAuthStatus() async {
+    await SharedPrefs.init();
+    
+    // Wait for animations to complete (2 seconds)
+    await Future.delayed(const Duration(seconds: 2));
+    
+    final token = SharedPrefs.authToken;
+    
+    if (token == null || token.isEmpty) {
+      _navigateToOnboarding();
+    } else {
+      Navigator.of(context).pushReplacementNamed(
+        '/pin',
+        arguments: {
+          'isFirstTime': false,
+          'showBiometricFirst': true,
+        },
+      );
+    }
   }
-}
   
   void _navigateToOnboarding() {
     Navigator.of(context).pushReplacement(
@@ -73,21 +131,6 @@ Future<void> _checkAuthStatus() async {
     );
   }
   
-void _navigateToHome() {
-  Navigator.of(context).pushReplacement(
-    MaterialPageRoute(
-      builder: (context) => HomeScreen(
-      ),
-    ),
-  );
-}
-
-  
-  void _navigateToAuth() {
-    // TODO: Navigate to auth screen
-    print('Navigate to auth');
-  }
-  
   @override
   void dispose() {
     _controller.dispose();
@@ -96,68 +139,95 @@ void _navigateToHome() {
   
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: theme.colorScheme.background,
       body: Center(
         child: AnimatedBuilder(
-          animation: _animation,
+          animation: _controller,
           builder: (context, child) {
-            return Transform.scale(
-              scale: 0.8 + (_animation.value * 0.2),
-              child: Opacity(
-                opacity: _animation.value,
-                child: child,
-              ),
-            );
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo with scale, rotation and fade
+                Transform.rotate(
+                  angle: _logoRotation.value * 3.14159, // نصف دورة كحد أقصى
+                  child: Opacity(
+                    opacity: _logoFade.value,
+                    child: Transform.scale(
+                      scale: _logoScale.value,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.primary.withOpacity(0.8),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.5),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.account_balance_wallet,
+                            size: 60,
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.account_balance_wallet,
-                    size: 60,
-                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              
-              // App Name
-              Text(
-                context.l10n.appTitle,
-
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                
+                const SizedBox(height: 32),
+                
+                // Title with slide and fade
+                SlideTransition(
+                  position: _titleSlide,
+                  child: FadeTransition(
+                    opacity: _titleFade,
+                    child: Text(
+                      context.l10n.appTitle,
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Tagline
-              Text(
-                context.l10n.manageYourMoneyEasily,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+                
+                const SizedBox(height: 12),
+                
+                // Subtitle with slide and fade
+                SlideTransition(
+                  position: _subtitleSlide,
+                  child: FadeTransition(
+                    opacity: _subtitleFade,
+                    child: Text(
+                      context.l10n.manageYourMoneyEasily,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onBackground.withOpacity(0.6),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

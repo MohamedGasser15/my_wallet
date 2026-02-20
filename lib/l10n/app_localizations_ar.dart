@@ -618,4 +618,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get considerSaving => 'فكر في توفير 20٪ من دخلك.';
+
+  @override
+  String get failed => 'فشل';
+
+  @override
+  String get incorrectPin => 'رمز PIN غير صحيح';
+
+  @override
+  String get forgotPin => 'نسيت الرمز؟';
+
+  @override
+  String get forgotPinDescription =>
+      'سنرسل رمز تحقق جديد إلى بريدك الإلكتروني لإعادة تعيين الرمز.';
+
+  @override
+  String get reset => 'إعادة تعيين';
+
+  @override
+  String get enterPin => 'أدخل رمز PIN';
+
+  @override
+  String get enterPinDescription =>
+      'أدخل رمز PIN المكون من 6 أرقام للوصول إلى محفظتك';
+
+  @override
+  String get codeVerifiedSuccess => 'تم التحقق بنجاح! جارٍ التوجيه...';
+
+  @override
+  String get pasteCode => 'لصق الرمز';
+
+  @override
+  String get invalidCodePasted => 'الرمز الملصق غير صالح، يرجى إدخال 6 أرقام';
+
+  @override
+  String get codeResent => 'تم إعادة إرسال الرمز';
+
+  @override
+  String get loginSuccess => 'تم تسجيل الدخول بنجاح!';
+
+  @override
+  String get forgot => 'نسيت؟';
 }

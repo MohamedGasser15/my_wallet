@@ -1279,6 +1279,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Consider saving 20% of your income.'**
   String get considerSaving;
+
+  /// No description provided for @failed.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get failed;
+
+  /// No description provided for @incorrectPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN'**
+  String get incorrectPin;
+
+  /// No description provided for @forgotPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot PIN?'**
+  String get forgotPin;
+
+  /// No description provided for @forgotPinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll send a new verification code to your email to reset your PIN.'**
+  String get forgotPinDescription;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @enterPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN'**
+  String get enterPin;
+
+  /// No description provided for @enterPinDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your 6-digit PIN to access your wallet'**
+  String get enterPinDescription;
+
+  /// No description provided for @codeVerifiedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified successfully! Redirecting...'**
+  String get codeVerifiedSuccess;
+
+  /// No description provided for @pasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code'**
+  String get pasteCode;
+
+  /// No description provided for @invalidCodePasted.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid pasted code, please enter 6 digits'**
+  String get invalidCodePasted;
+
+  /// No description provided for @codeResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code resent'**
+  String get codeResent;
+
+  /// No description provided for @loginSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Login successful!'**
+  String get loginSuccess;
+
+  /// No description provided for @forgot.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot?'**
+  String get forgot;
 }
 
 class _AppLocalizationsDelegate

@@ -1140,40 +1140,29 @@ List<String> get _categories => [
                 ),
 
                 // Quick Actions
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 24),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildQuickAction(
-                        Icons.add,
-                        context.l10n.addDeposit,
-                        () => _showAddTransactionDialog(TransactionType.income),
-                        isDarkMode,
-                      ),
-                      _buildQuickAction(
-                        Icons.remove,
-                        context.l10n.addWithdrawal,
-                        () => _showAddTransactionDialog(TransactionType.expense),
-                        isDarkMode,
-                      ),
-                      _buildQuickAction(
-                        Icons.swap_horiz,
-                        context.l10n.transfer,
-                        () {},
-                        isDarkMode,
-                      ),
-                      _buildQuickAction(
-                        Icons.download,
-                        context.l10n.withdraw,
-                        () {},
-                        isDarkMode,
-                      ),
-                    ],
-                  ),
-                ),
-
+// Quick Actions
+// Quick Actions
+Container(
+  margin: const EdgeInsets.symmetric(vertical: 24),
+  padding: const EdgeInsets.symmetric(horizontal: 20),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      _buildQuickAction(
+        Icons.add,
+        context.l10n.addDeposit,
+        () => _showAddTransactionDialog(TransactionType.income),
+        isDarkMode,
+      ),
+      _buildQuickAction(
+        Icons.remove,
+        context.l10n.addWithdrawal,
+        () => _showAddTransactionDialog(TransactionType.expense),
+        isDarkMode,
+      ),
+    ],
+  ),
+),
                 // Recent Transactions Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1318,41 +1307,70 @@ List<String> get _categories => [
     );
   }
 
-  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap, bool isDarkMode) {
-    return Column(
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+Widget _buildQuickAction(
+  IconData icon,
+  String label,
+  VoidCallback onTap,
+  bool isDarkMode,
+) {
+  return Expanded(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          splashColor: isDarkMode
+              ? Colors.white.withOpacity(0.15)
+              : Colors.black.withOpacity(0.1),
+          highlightColor: Colors.transparent,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            height: 60,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ),
-          child: IconButton(
-            onPressed: onTap,
-            icon: Icon(
-              icon,
-              color: isDarkMode ? Colors.white : Colors.black,
-              size: 24,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
+      ),
+    ),
+  );
+}
   Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
     final isIncome = transaction.isDeposit;
     
