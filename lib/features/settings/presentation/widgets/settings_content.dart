@@ -6,6 +6,8 @@ import 'package:my_wallet/core/services/biometric_service.dart';
 import 'package:my_wallet/core/services/theme_service.dart';
 import 'package:my_wallet/core/utils/language_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
+import 'package:my_wallet/features/profile/presentation/screens/profile_edit_screen.dart';
+import 'package:my_wallet/features/settings/presentation/screens/app_icon_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsContent extends StatefulWidget {
@@ -533,9 +535,21 @@ class _SettingsContentState extends State<SettingsContent> {
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () {
-                    _showComingSoonSnackbar();
-                  },
+onTap: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ProfileEditScreen(
+        onProfileUpdated: () {
+          // تحديث البيانات في الهيدر بعد الرجوع
+          setState(() {
+            // ممكن تعيد تحميل البيانات من SharedPrefs هنا
+          });
+        },
+      ),
+    ),
+  );
+},
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
@@ -584,43 +598,49 @@ class _SettingsContentState extends State<SettingsContent> {
           child: Column(
             children: [
               // App Icon
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.apps,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  context.l10n.appIcon,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  context.l10n.changeAppIcon,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  size: 20,
-                ),
-                onTap: () {
-                  _showComingSoonSnackbar();
-                },
-              ),
+// في _buildAppSettings، بعد الـ Divider بتاع App Icon
+ListTile(
+  leading: Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+      shape: BoxShape.circle,
+    ),
+    child: Icon(
+      Icons.apps,
+      color: isDarkMode ? Colors.white : Colors.black,
+      size: 20,
+    ),
+  ),
+  title: Text(
+    context.l10n.appIcon,
+    style: TextStyle(
+      color: isDarkMode ? Colors.white : Colors.black,
+      fontWeight: FontWeight.w600,
+    ),
+  ),
+  subtitle: Text(
+    context.l10n.changeAppIcon,
+    style: TextStyle(
+      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      fontSize: 12,
+    ),
+  ),
+  trailing: Icon(
+    Icons.chevron_right,
+    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+    size: 20,
+  ),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AppIconScreen(),
+      ),
+    );
+  },
+),
               Divider(
                 height: 1,
                 color: isDarkMode ? Colors.grey[800] : Colors.grey[200],

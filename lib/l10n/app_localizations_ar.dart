@@ -659,4 +659,34 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forgot => 'نسيت؟';
+
+  @override
+  String get profileUpdatedSuccess => 'تم تحديث الملف الشخصي بنجاح!';
+
+  @override
+  String get failedToUpdateProfile => 'فشل تحديث الملف الشخصي';
+
+  @override
+  String get enterFullName => 'أدخل الاسم الكامل';
+
+  @override
+  String get pleaseEnterFullName => 'الرجاء إدخال الاسم الكامل';
+
+  @override
+  String get enterUserName => 'أدخل اسم المستخدم';
+
+  @override
+  String get pleaseEnterUserName => 'الرجاء إدخال اسم المستخدم';
+
+  @override
+  String get enterPhoneNumber => 'أدخل رقم الهاتف';
+
+  @override
+  String get pleaseEnterPhoneNumber => 'الرجاء إدخال رقم الهاتف';
+
+  @override
+  String get currentIcon => 'الأيقونة الحالية';
+
+  @override
+  String get apply => 'تطبيق';
 }

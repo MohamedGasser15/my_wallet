@@ -218,5 +218,16 @@
   "invalidCodePasted": "Invalid pasted code, please enter 6 digits",
   "codeResent": "Code resent",
   "loginSuccess": "Login successful!",
-  "forgot": "Forgot?"
+  "forgot": "Forgot?",
+    "profileUpdatedSuccess": "Profile updated successfully!",
+  "failedToUpdateProfile": "Failed to update profile",
+  "enterFullName": "Enter full name",
+  "pleaseEnterFullName": "Please enter your full name",
+  "enterUserName": "Enter username",
+  "pleaseEnterUserName": "Please enter a username",
+  "enterPhoneNumber": "Enter phone number",
+  "pleaseEnterPhoneNumber": "Please enter your phone number",
+    "changeAppIcon": "Change App Icon",
+  "currentIcon": "Current Icon",
+  "apply": "Apply"
 }

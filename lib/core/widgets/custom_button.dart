@@ -41,20 +41,21 @@ class CustomButton extends StatelessWidget {
           elevation: 0,
         ),
         child: isLoading
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.onPrimary,
-                ),
-              )
-            : Text(
-                text,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+    ? SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: textColor ?? theme.colorScheme.onPrimary,
+        ),
+      )
+    : Text(
+        text,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: textColor ?? theme.colorScheme.onPrimary,
+        ),
+      ),
       ),
     );
   }

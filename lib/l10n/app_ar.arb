@@ -218,5 +218,16 @@
   "invalidCodePasted": "الرمز الملصق غير صالح، يرجى إدخال 6 أرقام",
   "codeResent": "تم إعادة إرسال الرمز",
   "forgot": "نسيت؟",
-  "loginSuccess": "تم تسجيل الدخول بنجاح!"
+  "loginSuccess": "تم تسجيل الدخول بنجاح!",
+    "profileUpdatedSuccess": "تم تحديث الملف الشخصي بنجاح!",
+  "failedToUpdateProfile": "فشل تحديث الملف الشخصي",
+  "enterFullName": "أدخل الاسم الكامل",
+  "pleaseEnterFullName": "الرجاء إدخال الاسم الكامل",
+  "enterUserName": "أدخل اسم المستخدم",
+  "pleaseEnterUserName": "الرجاء إدخال اسم المستخدم",
+  "enterPhoneNumber": "أدخل رقم الهاتف",
+  "pleaseEnterPhoneNumber": "الرجاء إدخال رقم الهاتف",
+    "changeAppIcon": "تغيير أيقونة التطبيق",
+  "currentIcon": "الأيقونة الحالية",
+  "apply": "تطبيق"
 }

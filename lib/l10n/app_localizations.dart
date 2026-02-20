@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @changeAppIcon.
   ///
   /// In en, this message translates to:
-  /// **'Change app icon'**
+  /// **'Change App Icon'**
   String get changeAppIcon;
 
   /// No description provided for @displayMode.
@@ -1357,6 +1357,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forgot?'**
   String get forgot;
+
+  /// No description provided for @profileUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully!'**
+  String get profileUpdatedSuccess;
+
+  /// No description provided for @failedToUpdateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile'**
+  String get failedToUpdateProfile;
+
+  /// No description provided for @enterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter full name'**
+  String get enterFullName;
+
+  /// No description provided for @pleaseEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name'**
+  String get pleaseEnterFullName;
+
+  /// No description provided for @enterUserName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter username'**
+  String get enterUserName;
+
+  /// No description provided for @pleaseEnterUserName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a username'**
+  String get pleaseEnterUserName;
+
+  /// No description provided for @enterPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone number'**
+  String get enterPhoneNumber;
+
+  /// No description provided for @pleaseEnterPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your phone number'**
+  String get pleaseEnterPhoneNumber;
+
+  /// No description provided for @currentIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Icon'**
+  String get currentIcon;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
 }
 
 class _AppLocalizationsDelegate

@@ -295,7 +295,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appIcon => 'App Icon';
 
   @override
-  String get changeAppIcon => 'Change app icon';
+  String get changeAppIcon => 'Change App Icon';
 
   @override
   String get displayMode => 'Display Mode';
@@ -660,4 +660,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgot => 'Forgot?';
+
+  @override
+  String get profileUpdatedSuccess => 'Profile updated successfully!';
+
+  @override
+  String get failedToUpdateProfile => 'Failed to update profile';
+
+  @override
+  String get enterFullName => 'Enter full name';
+
+  @override
+  String get pleaseEnterFullName => 'Please enter your full name';
+
+  @override
+  String get enterUserName => 'Enter username';
+
+  @override
+  String get pleaseEnterUserName => 'Please enter a username';
+
+  @override
+  String get enterPhoneNumber => 'Enter phone number';
+
+  @override
+  String get pleaseEnterPhoneNumber => 'Please enter your phone number';
+
+  @override
+  String get currentIcon => 'Current Icon';
+
+  @override
+  String get apply => 'Apply';
 }
