@@ -1417,6 +1417,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply'**
   String get apply;
+
+  /// No description provided for @recurringTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring Transaction'**
+  String get recurringTransaction;
+
+  /// No description provided for @recurringTransactionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat this transaction automatically'**
+  String get recurringTransactionDescription;
+
+  /// No description provided for @recurringInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Interval'**
+  String get recurringInterval;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get endDate;
 }
 
 class _AppLocalizationsDelegate

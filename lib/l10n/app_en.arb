@@ -229,5 +229,9 @@
   "pleaseEnterPhoneNumber": "Please enter your phone number",
     "changeAppIcon": "Change App Icon",
   "currentIcon": "Current Icon",
-  "apply": "Apply"
+  "apply": "Apply",
+    "recurringTransaction": "Recurring Transaction",
+  "recurringTransactionDescription": "Repeat this transaction automatically",
+  "recurringInterval": "Interval",
+  "endDate": "End date"
 }

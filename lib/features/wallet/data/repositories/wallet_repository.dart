@@ -89,40 +89,47 @@ class WalletRepository {
     }
   }
   
-  Future<WalletTransaction> addTransaction({
-    required String title,
-    required String description,
-    required double amount,
-    required String type,
-    required String category,
-    String? attachmentUrl,
-  }) async {
-    try {
-      final response = await _apiService.post(
-        ApiEndpoints.walletAddTransaction,
-        {
-          'title': title,
-          'description': description,
-          'amount': amount,
-          'type': type,
-          'category': category,
-          if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
-        },
-        requiresAuth: true,
-      );
-      
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        return WalletTransaction.fromJson(data['data']);
-      } else {
-        throw Exception(data['message'] ?? 'Failed to add transaction');
-      }
-    } catch (e) {
-      rethrow;
+Future<WalletTransaction> addTransaction({
+  required String title,
+  required String description,
+  required double amount,
+  required String type,
+  required String category,
+  DateTime? transactionDate, // اختياري (إذا لم يُرسل، يستخدم وقت الإنشاء)
+  bool isRecurring = false,
+  String? recurringInterval,
+  DateTime? recurringEndDate,
+  String? attachmentUrl,
+}) async {
+  try {
+    final response = await _apiService.post(
+      ApiEndpoints.walletAddTransaction,
+      {
+        'title': title,
+        'description': description,
+        'amount': amount,
+        'type': type,
+        'category': category,
+        if (transactionDate != null) 'transactionDate': transactionDate.toIso8601String(),
+        'isRecurring': isRecurring,
+        if (recurringInterval != null) 'recurringInterval': recurringInterval,
+        if (recurringEndDate != null) 'recurringEndDate': recurringEndDate.toIso8601String(),
+        if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
+      },
+      requiresAuth: true,
+    );
+    
+    final data = _apiService.handleResponse(response);
+    
+    if (data['success'] == true) {
+      return WalletTransaction.fromJson(data['data']);
+    } else {
+      throw Exception(data['message'] ?? 'Failed to add transaction');
     }
+  } catch (e) {
+    rethrow;
   }
-  
+}
   Future<bool> deleteTransaction(int transactionId) async {
     try {
       final response = await _apiService.get(

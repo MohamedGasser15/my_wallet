@@ -92,10 +92,14 @@ class WalletTransaction extends Equatable {
   final String title;
   final String description;
   final double amount;
-  final DateTime date;
+  final DateTime date; // تاريخ المعاملة (الافتراضي هو وقت الإنشاء)
+  final DateTime transactionDate; // التاريخ المختار من المستخدم
   final String type;
   final String category;
   final String? attachmentUrl;
+  final bool isRecurring;
+  final String? recurringInterval; // 'daily', 'weekly', 'monthly', 'yearly'
+  final DateTime? recurringEndDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -106,9 +110,13 @@ class WalletTransaction extends Equatable {
     required this.description,
     required this.amount,
     required this.date,
+    required this.transactionDate,
     required this.type,
     required this.category,
     this.attachmentUrl,
+    this.isRecurring = false,
+    this.recurringInterval,
+    this.recurringEndDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -121,9 +129,17 @@ class WalletTransaction extends Equatable {
       description: json['description'],
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date']),
+      transactionDate: json['transactionDate'] != null
+          ? DateTime.parse(json['transactionDate'])
+          : DateTime.parse(json['date']),
       type: json['type'],
       category: json['category'],
       attachmentUrl: json['attachmentUrl'],
+      isRecurring: json['isRecurring'] ?? false,
+      recurringInterval: json['recurringInterval'],
+      recurringEndDate: json['recurringEndDate'] != null
+          ? DateTime.parse(json['recurringEndDate'])
+          : null,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );
@@ -136,9 +152,13 @@ class WalletTransaction extends Equatable {
         'description': description,
         'amount': amount,
         'date': date.toIso8601String(),
+        'transactionDate': transactionDate.toIso8601String(),
         'type': type,
         'category': category,
         'attachmentUrl': attachmentUrl,
+        'isRecurring': isRecurring,
+        'recurringInterval': recurringInterval,
+        'recurringEndDate': recurringEndDate?.toIso8601String(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -157,10 +177,12 @@ class WalletTransaction extends Equatable {
       case 'shopping':
         return Icons.shopping_bag;
       case 'transport':
+      case 'transportation':
         return Icons.directions_car;
       case 'entertainment':
         return Icons.movie;
       case 'bill':
+      case 'bills':
         return Icons.receipt;
       case 'health':
         return Icons.medical_services;
@@ -179,14 +201,17 @@ class WalletTransaction extends Equatable {
         description,
         amount,
         date,
+        transactionDate,
         type,
         category,
         attachmentUrl,
+        isRecurring,
+        recurringInterval,
+        recurringEndDate,
         createdAt,
         updatedAt,
       ];
 }
-
 class WalletSummary extends Equatable {
   final double totalDeposits;
   final double totalWithdrawals;

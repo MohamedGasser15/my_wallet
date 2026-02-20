@@ -689,4 +689,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get apply => 'تطبيق';
+
+  @override
+  String get recurringTransaction => 'معاملة متكررة';
+
+  @override
+  String get recurringTransactionDescription => 'كرر هذه المعاملة تلقائياً';
+
+  @override
+  String get recurringInterval => 'الفاصل الزمني';
+
+  @override
+  String get endDate => 'تاريخ الانتهاء';
 }

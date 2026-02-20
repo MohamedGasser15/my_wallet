@@ -690,4 +690,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get apply => 'Apply';
+
+  @override
+  String get recurringTransaction => 'Recurring Transaction';
+
+  @override
+  String get recurringTransactionDescription =>
+      'Repeat this transaction automatically';
+
+  @override
+  String get recurringInterval => 'Interval';
+
+  @override
+  String get endDate => 'End date';
 }

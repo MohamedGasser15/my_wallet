@@ -229,5 +229,9 @@
   "pleaseEnterPhoneNumber": "الرجاء إدخال رقم الهاتف",
     "changeAppIcon": "تغيير أيقونة التطبيق",
   "currentIcon": "الأيقونة الحالية",
-  "apply": "تطبيق"
+  "apply": "تطبيق",
+    "recurringTransaction": "معاملة متكررة",
+  "recurringTransactionDescription": "كرر هذه المعاملة تلقائياً",
+  "recurringInterval": "الفاصل الزمني",
+  "endDate": "تاريخ الانتهاء"
 }
