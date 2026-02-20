@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/services/biometric_service.dart';
+import 'package:my_wallet/core/services/hide_balance_service.dart';
 import 'package:my_wallet/core/services/theme_service.dart';
 import 'package:my_wallet/core/utils/language_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:my_wallet/features/settings/presentation/screens/app_icon_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsContent extends StatefulWidget {
@@ -944,168 +946,164 @@ Widget _buildLanguageOptionInModal({
     ),
   );
 }
-  Widget _buildSecuritySettings(bool isDarkMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.security,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+Widget _buildSecuritySettings(bool isDarkMode) {
+  final hideService = Provider.of<HideBalanceService>(context);
+  
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        context.l10n.security,
+        style: TextStyle(
+          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      const SizedBox(height: 12),
+      Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            ),
-          ),
-          child: Column(
-            children: [
-              // Change Passcode
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.lock_outline,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 20,
-                  ),
+        child: Column(
+          children: [
+            // Change Passcode
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
                 ),
-                title: Text(
-                  context.l10n.changePasscode,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  context.l10n.updateYour6DigitPasscode,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                child: Icon(
+                  Icons.lock_outline,
+                  color: isDarkMode ? Colors.white : Colors.black,
                   size: 20,
                 ),
-                onTap: () {
-                  _showComingSoonSnackbar();
-                },
               ),
-              Divider(
-                height: 1,
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              title: Text(
+                context.l10n.changePasscode,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              
-              // Sign with Face ID / Fingerprint
-              SwitchListTile(
-                value: _biometricEnabled,
-                onChanged: (value) async {
-                  if (value) {
-                    final authenticated = await BiometricService.authenticate();
-                    if (authenticated) {
-                      await BiometricService.enableBiometric();
-                      setState(() {
-                        _biometricEnabled = true;
-                      });
-                    }
-                  } else {
-                    await BiometricService.disableBiometric();
+              subtitle: Text(
+                context.l10n.updateYour6DigitPasscode,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                size: 20,
+              ),
+              onTap: () {
+                _showComingSoonSnackbar();
+              },
+            ),
+            Divider(
+              height: 1,
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+            ),
+            
+            // Sign with Face ID / Fingerprint
+            SwitchListTile(
+              value: _biometricEnabled,
+              onChanged: (value) async {
+                if (value) {
+                  final authenticated = await BiometricService.authenticate();
+                  if (authenticated) {
+                    await BiometricService.enableBiometric();
                     setState(() {
-                      _biometricEnabled = false;
+                      _biometricEnabled = true;
                     });
                   }
-                },
-                title: Text(
-                  context.l10n.signWithFaceIDFingerprint,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  context.l10n.useBiometricAuthentication,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-                secondary: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.fingerprint,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ),
-              Divider(
-                height: 1,
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-              ),
-              
-              // Hide Balances
-              SwitchListTile(
-                value: _hideBalances,
-                onChanged: (value) {
+                } else {
+                  await BiometricService.disableBiometric();
                   setState(() {
-                    _hideBalances = value;
+                    _biometricEnabled = false;
                   });
-                  _showComingSoonSnackbar();
-                },
-                title: Text(
-                  context.l10n.hideBalances,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  context.l10n.hideYourBalancesForPrivacy,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-                secondary: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.visibility_off,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 20,
-                  ),
+                }
+              },
+              title: Text(
+                context.l10n.signWithFaceIDFingerprint,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          ),
+              subtitle: Text(
+                context.l10n.useBiometricAuthentication,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+              secondary: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.fingerprint,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+            ),
+            
+            // Hide Balances
+            SwitchListTile(
+              value: hideService.isHidden,
+              onChanged: (value) => hideService.setHidden(value),
+              title: Text(
+                context.l10n.hideBalances,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                context.l10n.hideYourBalancesForPrivacy,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+              secondary: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.visibility_off,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-
+      ),
+    ],
+  );
+}
   Widget _buildAboutUsSection(bool isDarkMode) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

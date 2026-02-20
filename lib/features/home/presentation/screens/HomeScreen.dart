@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:my_wallet/core/services/hide_balance_service.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/settings/presentation/screens/settings_screen.dart';
@@ -16,11 +18,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: PageView(
@@ -935,7 +935,7 @@ List<String> get _categories => [
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+    final hideService = Provider.of<HideBalanceService>(context);
     return SafeArea(
       bottom: false,
       child: RefreshIndicator(
@@ -1054,93 +1054,102 @@ List<String> get _categories => [
                 ),
 
                 // Balance Card
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              context.l10n.totalBalance,
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                            Icon(
-                              Icons.visibility_outlined,
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Text(
-                              '\$',
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _homeData!.balance.totalBalance.toStringAsFixed(2),
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.white : Colors.black,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildBalanceStat(
-                                context.l10n.income, 
-                                _homeData!.balance.totalDeposits, 
-                                isDarkMode, 
-                                isPositive: true
-                              ),
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
-                              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                            ),
-                            Expanded(
-                              child: _buildBalanceStat(
-                                context.l10n.expense, 
-                                _homeData!.balance.totalWithdrawals, 
-                                isDarkMode, 
-                                isPositive: false
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Quick Actions
-// Quick Actions
+// Balance Card
+// Balance Card
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 20),
+  child: Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(
+        color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+        width: 1,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.l10n.totalBalance,
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            // زر العين لتبديل الإخفاء
+            IconButton(
+              icon: Icon(
+                hideService.isHidden
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                size: 20,
+              ),
+              onPressed: () => hideService.toggle(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(
+              '\$',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              hideService.isHidden
+                  ? '••••'
+                  : _homeData!.balance.totalBalance.toStringAsFixed(2),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: _buildBalanceStat(
+                context.l10n.income,
+                hideService.isHidden ? 0 : _homeData!.balance.totalDeposits,
+                isDarkMode,
+                isPositive: true,
+                hidden: hideService.isHidden,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+            ),
+            Expanded(
+              child: _buildBalanceStat(
+                context.l10n.expense,
+                hideService.isHidden ? 0 : _homeData!.balance.totalWithdrawals,
+                isDarkMode,
+                isPositive: false,
+                hidden: hideService.isHidden,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
 // Quick Actions
 Container(
   margin: const EdgeInsets.symmetric(vertical: 24),
@@ -1271,20 +1280,21 @@ Container(
     );
   }
 
-  Widget _buildBalanceStat(String label, double amount, bool isDarkMode, {required bool isPositive}) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 12,
-          ),
+Widget _buildBalanceStat(String label, double amount, bool isDarkMode, {required bool isPositive, required bool hidden}) {
+  return Column(
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          fontSize: 12,
         ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      ),
+      const SizedBox(height: 4),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!hidden) ...[
             Text(
               isPositive ? '+' : '-',
               style: TextStyle(
@@ -1301,12 +1311,20 @@ Container(
                 fontWeight: FontWeight.w800,
               ),
             ),
-          ],
-        ),
-      ],
-    );
-  }
-
+          ] else
+            Text(
+              '••••',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+        ],
+      ),
+    ],
+  );
+}
 Widget _buildQuickAction(
   IconData icon,
   String label,

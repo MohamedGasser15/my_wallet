@@ -9,7 +9,7 @@ class AppConstants {
   static const String authTokenKey = 'authToken';
   static const String userDataKey = 'userData';
   static const String appLanguageKey = 'appLanguage';
-  
+  static const String hideBalancesKey = 'hideBalances';
   // App Languages
   static const String arabic = 'ar';
   static const String english = 'en';
