@@ -8,11 +8,15 @@ import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_sc
 class VerificationScreen extends StatefulWidget {
   final String email;
   final bool isLogin;
+  final String? deviceName; 
+  final String? ipAddress;
 
   const VerificationScreen({
     super.key,
     required this.email,
     required this.isLogin,
+    this.deviceName,
+    this.ipAddress,
   });
 
   @override
@@ -210,7 +214,12 @@ class _VerificationScreenState extends State<VerificationScreen> with TickerProv
     });
 
     try {
-      await _authRepository.resendCode(widget.email, widget.isLogin);
+    await _authRepository.resendCode(
+  email: widget.email,
+  isLogin: widget.isLogin,
+  deviceName: widget.deviceName,   // أضف ده
+  ipAddress: widget.ipAddress,     // أضف ده
+);
       _resetTimer();
       _clearCode();
       _showSuccessSnackBar('Verification code resent to ${widget.email}');

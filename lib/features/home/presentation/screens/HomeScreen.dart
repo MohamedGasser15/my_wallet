@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -141,30 +142,30 @@ List<String> get _categories => [
     _loadHomeData();
   }
 
-  Future<void> _loadHomeData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+Future<void> _loadHomeData() async {
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
 
-    try {
-      // محاكاة تأخير الشبكة
-      await Future.delayed(const Duration(seconds: 2));
-      
-      final data = await _walletRepository.getHomeData();
-      setState(() {
-        _homeData = data;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = context.l10n.errorLoadingData(e.toString());
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  try {
+    // يمكنك إزالة الـ delay في الإنتاج
+    await Future.delayed(const Duration(seconds: 2));
+    
+    final data = await _walletRepository.getHomeData(); // الآن تعيد WalletHomeData مباشرة
+    setState(() {
+      _homeData = data;
+    });
+  } catch (e) {
+    setState(() {
+      _errorMessage = context.l10n.errorLoadingData(e.toString());
+    });
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   Future<void> _refreshData() async {
     await _loadHomeData();
@@ -373,39 +374,42 @@ void _showAddTransactionDialog(TransactionType type) {
                     const SizedBox(height: 16),
                     
                     // Amount Field
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: TextFormField(
-                        controller: amountController,
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          setState(() {
-                            _previewAmount = double.tryParse(value);
-                          });
-                        },
-                        decoration: InputDecoration(
-                          labelText: context.l10n.amount,
-                          labelStyle: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                          prefixIcon: Icon(
-                            Icons.attach_money,
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                          filled: true,
-                          fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
+// Amount Field
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 24),
+  child: TextFormField(
+    controller: amountController,
+    keyboardType: TextInputType.number,
+    inputFormatters: [
+      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // يسمح فقط بالأرقام ونقطة عشرية واحدة
+    ],
+    onChanged: (value) {
+      setState(() {
+        _previewAmount = double.tryParse(value);
+      });
+    },
+    decoration: InputDecoration(
+      labelText: context.l10n.amount,
+      labelStyle: TextStyle(
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      ),
+      prefixIcon: Icon(
+        Icons.attach_money,
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      ),
+      filled: true,
+      fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: 16,
+      ),
+    ),
+  ),
+),
                     const SizedBox(height: 16),
                     
                     // Quick amount suggestions
@@ -1698,102 +1702,102 @@ Widget _buildQuickAction(
     ),
   );
 }
-  Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
-    final isIncome = transaction.isDeposit;
-    
-    return GestureDetector(
-      onLongPress: () {
-        _showDeleteConfirmationDialog(transaction);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            width: 1,
-          ),
+Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
+  final isIncome = transaction.isDeposit;
+  
+  return GestureDetector(
+    onLongPress: () {
+      _showDeleteConfirmationDialog(transaction);
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isIncome 
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                transaction.icon,
-                color: isIncome ? Colors.green[800] : Colors.red[800],
-                size: 20,
-              ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isIncome 
+                ? Colors.green.withOpacity(0.1)
+                : Colors.red.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.title,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${transaction.category} • ${_formatDate(transaction.date)}',
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (transaction.description.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        transaction.description,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            child: Icon(
+              transaction.icon,
+              color: isIncome ? Colors.green[800] : Colors.red[800],
+              size: 20,
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.formattedAmount,
+                  transaction.title,
                   style: TextStyle(
-                    color: isIncome ? Colors.green[800] : Colors.red[800],
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  _formatDate(transaction.date),
+                  '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
                   style: TextStyle(
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
+                // التحقق من أن الوصف ليس null وليس فارغاً
+                if (transaction.description != null && transaction.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      transaction.description!,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ],
-        ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                transaction.formattedAmount,
+                style: TextStyle(
+                  color: isIncome ? Colors.green[800] : Colors.red[800],
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                _formatDate(transaction.transactionDate),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),

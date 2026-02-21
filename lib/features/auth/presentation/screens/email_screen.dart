@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/services/device_info_service.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 
@@ -20,7 +21,8 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
   bool _isEmailValid = false;
   bool _isLoading = false;
   bool _emailExists = false;
-  
+  String? _deviceName;
+  String? _ipAddress;
   // Wave loading animation variables
   late AnimationController _waveController;
   late Animation<double> _waveAnimation;
@@ -31,7 +33,7 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _emailController.addListener(_validateEmail);
-    
+      _loadDeviceInfo();
     // Initialize wave animation controller
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -45,7 +47,16 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
       ),
     );
   }
-  
+  Future<void> _loadDeviceInfo() async {
+  final deviceName = await DeviceInfoService().getDeviceName();
+  final ip = await DeviceInfoService().getPublicIp(); // اختياري
+  if (mounted) {
+    setState(() {
+      _deviceName = deviceName;
+      _ipAddress = ip;
+    });
+  }
+}
   void _startWaveAnimation() {
     _waveController.repeat(reverse: true);
     
@@ -132,27 +143,36 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
     }
   }
   
-  Future<void> _sendVerificationCode() async {
-    try {
-      final email = _emailController.text.trim();
-      final isLogin = _emailExists;
-      
-      await _authRepository.sendVerification(email, isLogin);
-      
-      // الانتقال لشاشة التحقق
-      Navigator.pushNamed(
-        context,
-        '/verification',
-        arguments: {
-          'email': email,
-          'isLogin': isLogin,
-        },
-      );
-    } catch (e) {
-      _showErrorSnackbar('Failed to send verification code');
-    }
-  }
+Future<void> _sendVerificationCode() async {
+  final email = _emailController.text.trim();
+  final isLogin = _emailExists;
   
+  // تأكد من أن deviceName موجود (لو لسه مجاش نستخدم قيمة افتراضية)
+  final deviceName = _deviceName ?? await DeviceInfoService().getDeviceName();
+
+  try {
+    await _authRepository.sendVerification(
+      email: email,
+      isLogin: isLogin,
+      deviceName: deviceName,
+      ipAddress: _ipAddress,
+    );
+    
+    // الانتقال لشاشة التحقق مع تمرير البيانات
+    Navigator.pushNamed(
+      context,
+      '/verification',
+      arguments: {
+        'email': email,
+        'isLogin': isLogin,
+        'deviceName': deviceName,
+        'ipAddress': _ipAddress,
+      },
+    );
+  } catch (e) {
+    _showErrorSnackbar('Failed to send verification code');
+  }
+}
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

@@ -27,7 +27,46 @@ class ApiService {
       requestHeader: true,
     ));
   }
-  
+  Future<Response> delete(
+  String endpoint, {
+  Map<String, dynamic>? queryParams,
+  bool requiresAuth = false,
+}) async {
+  try {
+    final headers = <String, String>{};
+    if (requiresAuth) {
+      final token = SharedPrefs.authToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+    
+    print('🌐 DELETE Request to: $endpoint');
+    if (queryParams != null) {
+      print('📋 Query Params: $queryParams');
+    }
+    
+    final response = await _dio.delete(
+      endpoint,
+      queryParameters: queryParams,
+      options: Options(headers: headers),
+    );
+    
+    print('📥 Response Status: ${response.statusCode}');
+    print('📥 Response Body: ${response.data}');
+    
+    return response;
+  } on DioException catch (e) {
+    print('❌ DELETE Error: $e');
+    if (e.response != null) {
+      print('❌ Response: ${e.response?.data}');
+    }
+    rethrow;
+  } catch (e) {
+    print('❌ DELETE Error: $e');
+    rethrow;
+  }
+}
   Future<Response> post(
     String endpoint, 
     Map<String, dynamic> body, {

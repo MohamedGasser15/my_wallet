@@ -7,6 +7,7 @@ import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
 class WalletRepository {
   final ApiService _apiService = ApiService();
   
+  // جلب بيانات الصفحة الرئيسية
   Future<WalletHomeData> getHomeData() async {
     try {
       final response = await _apiService.get(
@@ -14,18 +15,16 @@ class WalletRepository {
         requiresAuth: true,
       );
       
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        return WalletHomeData.fromJson(data['data']);
-      } else {
-        throw Exception(data['message'] ?? 'Failed to load home data');
-      }
+      // الـ API يعيد WalletHomeData مباشرة بدون غلاف
+      return WalletHomeData.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to load home data: $e');
     }
   }
   
+  // جلب الرصيد فقط
   Future<WalletBalance> getBalance() async {
     try {
       final response = await _apiService.get(
@@ -33,41 +32,40 @@ class WalletRepository {
         requiresAuth: true,
       );
       
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        return WalletBalance.fromJson(data['data']);
-      } else {
-        throw Exception(data['message'] ?? 'Failed to load balance');
-      }
+      return WalletBalance.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to load balance: $e');
     }
   }
   
-  Future<List<WalletTransaction>> getTransactions({
+  // جلب قائمة المعاملات مع إمكانية التصفية والصفحات
+  Future<TransactionListResponse> getTransactions({
     int page = 1,
-    int limit = 20,
-    DateTime? startDate,
-    DateTime? endDate,
-    String? type,
+    int pageSize = 20,
+    DateTime? fromDate,
+    DateTime? toDate,
+    String? type, // "Deposit" أو "Withdrawal"
+    String? category,
   }) async {
     try {
       final queryParams = <String, dynamic>{
         'page': page,
-        'limit': limit,
+        'pageSize': pageSize,
       };
       
-      if (startDate != null) {
-        queryParams['startDate'] = startDate.toIso8601String();
+      if (fromDate != null) {
+        queryParams['fromDate'] = fromDate.toIso8601String();
       }
-      
-      if (endDate != null) {
-        queryParams['endDate'] = endDate.toIso8601String();
+      if (toDate != null) {
+        queryParams['toDate'] = toDate.toIso8601String();
       }
-      
-      if (type != null) {
+      if (type != null && type.isNotEmpty) {
         queryParams['type'] = type;
+      }
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
       }
       
       final response = await _apiService.get(
@@ -76,102 +74,118 @@ class WalletRepository {
         requiresAuth: true,
       );
       
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        final List<dynamic> transactions = data['data'];
-        return transactions.map((t) => WalletTransaction.fromJson(t)).toList();
-      } else {
-        throw Exception(data['message'] ?? 'Failed to load transactions');
-      }
+      return TransactionListResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to load transactions: $e');
     }
   }
   
-Future<WalletTransaction> addTransaction({
-  required String title,
-  required String description,
-  required double amount,
-  required String type,
-  required String category,
-  DateTime? transactionDate, // اختياري (إذا لم يُرسل، يستخدم وقت الإنشاء)
-  bool isRecurring = false,
-  String? recurringInterval,
-  DateTime? recurringEndDate,
-  String? attachmentUrl,
-}) async {
-  try {
-    final response = await _apiService.post(
-      ApiEndpoints.walletAddTransaction,
-      {
+  // إضافة معاملة جديدة
+  Future<WalletTransaction> addTransaction({
+    required String title,
+    String? description,
+    required double amount,
+    required String type, // "Deposit" أو "Withdrawal"
+    required String category,
+    DateTime? transactionDate, // إذا لم يُرسل، الخادم سيستخدم وقت الإنشاء
+    bool isRecurring = false,
+    String? recurringInterval,
+    DateTime? recurringEndDate,
+  }) async {
+    try {
+      final body = <String, dynamic>{
         'title': title,
-        'description': description,
         'amount': amount,
         'type': type,
         'category': category,
-        if (transactionDate != null) 'transactionDate': transactionDate.toIso8601String(),
         'isRecurring': isRecurring,
-        if (recurringInterval != null) 'recurringInterval': recurringInterval,
-        if (recurringEndDate != null) 'recurringEndDate': recurringEndDate.toIso8601String(),
-        if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
-      },
-      requiresAuth: true,
-    );
-    
-    final data = _apiService.handleResponse(response);
-    
-    if (data['success'] == true) {
-      return WalletTransaction.fromJson(data['data']);
-    } else {
-      throw Exception(data['message'] ?? 'Failed to add transaction');
-    }
-  } catch (e) {
-    rethrow;
-  }
-}
-  Future<bool> deleteTransaction(int transactionId) async {
-    try {
-      final response = await _apiService.get(
-        '${ApiEndpoints.walletDeleteTransaction}?transactionId=$transactionId',
+      };
+      
+      if (description != null && description.isNotEmpty) {
+        body['description'] = description;
+      }
+      if (transactionDate != null) {
+        body['transactionDate'] = transactionDate.toIso8601String();
+      }
+      if (recurringInterval != null) {
+        body['recurringInterval'] = recurringInterval;
+      }
+      if (recurringEndDate != null) {
+        body['recurringEndDate'] = recurringEndDate.toIso8601String();
+      }
+      
+      final response = await _apiService.post(
+        ApiEndpoints.walletAddTransaction,
+        body,
         requiresAuth: true,
       );
       
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        return true;
-      } else {
-        throw Exception(data['message'] ?? 'Failed to delete transaction');
-      }
+      return WalletTransaction.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to add transaction: $e');
     }
   }
   
+  // حذف معاملة (soft delete)
+  Future<bool> deleteTransaction(int transactionId) async {
+    try {
+      await _apiService.delete(
+        '${ApiEndpoints.walletDeleteTransaction}/$transactionId',
+        requiresAuth: true,
+      );
+      return true; // إذا لم يرمي استثناء، فالحذف ناجح
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 204 || e.response?.statusCode == 200) {
+        return true; // في حالة نجاح بدون محتوى
+      }
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Failed to delete transaction: $e');
+    }
+  }
+  
+  // جلب ملخص للتحليلات
   Future<WalletSummary> getSummary({
-    required DateTime startDate,
-    required DateTime endDate,
+    required DateTime fromDate,
+    required DateTime toDate,
   }) async {
     try {
       final response = await _apiService.get(
         ApiEndpoints.walletSummary,
         queryParams: {
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
+          'fromDate': fromDate.toIso8601String(),
+          'toDate': toDate.toIso8601String(),
         },
         requiresAuth: true,
       );
       
-      final data = _apiService.handleResponse(response);
-      
-      if (data['success'] == true) {
-        return WalletSummary.fromJson(data['data']);
-      } else {
-        throw Exception(data['message'] ?? 'Failed to load summary');
-      }
+      return WalletSummary.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     } catch (e) {
-      rethrow;
+      throw Exception('Failed to load summary: $e');
     }
+  }
+  
+  // معالجة أخطاء Dio
+  String _handleDioError(DioException e) {
+    if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map && data.containsKey('message')) {
+        return data['message'];
+      }
+      return 'Server error: ${e.response!.statusCode}';
+    } else if (e.type == DioExceptionType.connectionTimeout ||
+               e.type == DioExceptionType.receiveTimeout ||
+               e.type == DioExceptionType.sendTimeout) {
+      return 'Connection timeout. Please check your internet.';
+    } else if (e.type == DioExceptionType.connectionError) {
+      return 'No internet connection.';
+    }
+    return 'An error occurred: ${e.message}';
   }
 }

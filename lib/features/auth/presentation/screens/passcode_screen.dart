@@ -10,12 +10,16 @@ class PasscodeScreen extends StatefulWidget {
   final String email;
   final String verificationCode;
   final bool isLogin;
-  
+  final String? deviceName;
+  final String? ipAddress;
+
   const PasscodeScreen({
     super.key,
     required this.email,
     required this.verificationCode,
     required this.isLogin,
+    this.deviceName,
+    this.ipAddress,
   });
   
   @override
@@ -253,8 +257,13 @@ class _PasscodeScreenState extends State<PasscodeScreen> with TickerProviderStat
                     setState(() => _isLoading = true);
                     
                     try {
-                      await _authRepository.sendVerification(widget.email, widget.isLogin);
-                      _showSuccessSnackBar('New code sent to ${widget.email}');
+                       await _authRepository.sendVerification(
+          email: widget.email,
+          isLogin: widget.isLogin,
+          deviceName: widget.deviceName,
+          ipAddress: widget.ipAddress,
+        );
+        _showSuccessSnackBar('New code sent to ${widget.email}');
                     } catch (e) {
                       _showErrorSnackBar('Failed to send code');
                     } finally {

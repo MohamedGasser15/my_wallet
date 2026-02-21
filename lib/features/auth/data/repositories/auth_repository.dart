@@ -6,28 +6,30 @@ import 'package:my_wallet/core/utils/shared_prefs.dart';
 class AuthRepository {
   final ApiService _apiService = ApiService();
   
-  // Send verification code
-  Future<Map<String, dynamic>> sendVerification(String email, bool isLogin) async {
-    try {
-      final response = await _apiService.post(
-        ApiEndpoints.sendVerification,
-        {
-          'email': email,
-          'isLogin': isLogin,
-        },
-      );
-      
-      final data = _apiService.handleResponse(response);
-      
-      // تخزين الإيميل مؤقتاً للاستخدام لاحقاً
-      await SharedPrefs.setString('temp_email', email);
-      await SharedPrefs.setBool('temp_is_login', isLogin);
-      
-      return data;
-    } catch (e) {
-      rethrow;
-    }
+Future<Map<String, dynamic>> sendVerification({
+  required String email,
+  required bool isLogin,
+  String? deviceName,
+  String? ipAddress,
+}) async {
+  try {
+    final response = await _apiService.post(
+      ApiEndpoints.sendVerification,
+      {
+        'email': email,
+        'isLogin': isLogin,
+        'deviceName': deviceName,
+        'ipAddress': ipAddress,
+      },
+    );
+    final data = _apiService.handleResponse(response);
+    await SharedPrefs.setString('temp_email', email);
+    await SharedPrefs.setBool('temp_is_login', isLogin);
+    return data;
+  } catch (e) {
+    rethrow;
   }
+}
   
   // Verify code only (نقطة التحقق المنفصلة الجديدة)
   Future<Map<String, dynamic>> verifyCode({
@@ -59,21 +61,23 @@ class AuthRepository {
   }
   
   // Resend verification code
-  Future<Map<String, dynamic>> resendCode(String email, bool isLogin) async {
-    try {
-      final response = await _apiService.post(
-        ApiEndpoints.resendCode,
-        {
-          'email': email,
-          'isLogin': isLogin,
-        },
-      );
-      
-      return _apiService.handleResponse(response);
-    } catch (e) {
-      rethrow;
-    }
-  }
+  Future<Map<String, dynamic>> resendCode({
+  required String email,
+  required bool isLogin,
+  String? deviceName,
+  String? ipAddress,
+}) async {
+  final response = await _apiService.post(
+    ApiEndpoints.resendCode,
+    {
+      'email': email,
+      'isLogin': isLogin,
+      'deviceName': deviceName,
+      'ipAddress': ipAddress,
+    },
+  );
+  return _apiService.handleResponse(response);
+}
   
   // Complete registration
   Future<Map<String, dynamic>> completeRegistration({

@@ -2,38 +2,13 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-class WalletHomeResponse extends Equatable {
-  final bool success;
-  final String? message;
-  final WalletHomeData data;
-
-  const WalletHomeResponse({
-    required this.success,
-    this.message,
-    required this.data,
-  });
-
-  factory WalletHomeResponse.fromJson(Map<String, dynamic> json) {
-    return WalletHomeResponse(
-      success: json['success'] ?? false,
-      message: json['message'],
-      data: WalletHomeData.fromJson(json['data']),
-    );
-  }
-
-  @override
-  List<Object?> get props => [success, message, data];
-}
-
 class WalletHomeData extends Equatable {
   final WalletBalance balance;
   final List<WalletTransaction> recentTransactions;
-  final WalletSummary? monthlySummary;
 
   const WalletHomeData({
     required this.balance,
     required this.recentTransactions,
-    this.monthlySummary,
   });
 
   factory WalletHomeData.fromJson(Map<String, dynamic> json) {
@@ -42,27 +17,22 @@ class WalletHomeData extends Equatable {
       recentTransactions: (json['recentTransactions'] as List)
           .map((e) => WalletTransaction.fromJson(e))
           .toList(),
-      monthlySummary: json['monthlySummary'] != null
-          ? WalletSummary.fromJson(json['monthlySummary'])
-          : null,
     );
   }
 
   @override
-  List<Object?> get props => [balance, recentTransactions, monthlySummary];
+  List<Object?> get props => [balance, recentTransactions];
 }
 
 class WalletBalance extends Equatable {
   final double totalBalance;
   final double totalDeposits;
   final double totalWithdrawals;
-  final DateTime lastUpdated;
 
   const WalletBalance({
     required this.totalBalance,
     required this.totalDeposits,
     required this.totalWithdrawals,
-    required this.lastUpdated,
   });
 
   factory WalletBalance.fromJson(Map<String, dynamic> json) {
@@ -70,7 +40,6 @@ class WalletBalance extends Equatable {
       totalBalance: (json['totalBalance'] as num).toDouble(),
       totalDeposits: (json['totalDeposits'] as num).toDouble(),
       totalWithdrawals: (json['totalWithdrawals'] as num).toDouble(),
-      lastUpdated: DateTime.parse(json['lastUpdated']),
     );
   }
 
@@ -78,96 +47,90 @@ class WalletBalance extends Equatable {
         'totalBalance': totalBalance,
         'totalDeposits': totalDeposits,
         'totalWithdrawals': totalWithdrawals,
-        'lastUpdated': lastUpdated.toIso8601String(),
       };
 
   @override
-  List<Object?> get props =>
-      [totalBalance, totalDeposits, totalWithdrawals, lastUpdated];
+  List<Object?> get props => [totalBalance, totalDeposits, totalWithdrawals];
 }
 
 class WalletTransaction extends Equatable {
   final int id;
-  final int userId;
+  final String? userId; // اختياري – قد لا يأتي في بعض الاستجابات
   final String title;
-  final String description;
+  final String? description;
   final double amount;
-  final DateTime date; // تاريخ المعاملة (الافتراضي هو وقت الإنشاء)
-  final DateTime transactionDate; // التاريخ المختار من المستخدم
+  final DateTime transactionDate;
   final String type;
   final String category;
-  final String? attachmentUrl;
   final bool isRecurring;
-  final String? recurringInterval; // 'daily', 'weekly', 'monthly', 'yearly'
+  final String? recurringInterval;
   final DateTime? recurringEndDate;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt; // اختياري – قد لا يأتي في بعض الاستجابات
+  final DateTime? updatedAt; // اختياري
 
   const WalletTransaction({
     required this.id,
-    required this.userId,
+    this.userId,
     required this.title,
-    required this.description,
+    this.description,
     required this.amount,
-    required this.date,
     required this.transactionDate,
     required this.type,
     required this.category,
-    this.attachmentUrl,
     this.isRecurring = false,
     this.recurringInterval,
     this.recurringEndDate,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
     return WalletTransaction(
       id: json['id'],
-      userId: json['userId'],
+      userId: json['userId']?.toString(), // لو موجود، يحوله ل String
       title: json['title'],
       description: json['description'],
       amount: (json['amount'] as num).toDouble(),
-      date: DateTime.parse(json['date']),
-      transactionDate: json['transactionDate'] != null
-          ? DateTime.parse(json['transactionDate'])
-          : DateTime.parse(json['date']),
+      transactionDate: DateTime.parse(json['transactionDate']),
       type: json['type'],
       category: json['category'],
-      attachmentUrl: json['attachmentUrl'],
       isRecurring: json['isRecurring'] ?? false,
       recurringInterval: json['recurringInterval'],
       recurringEndDate: json['recurringEndDate'] != null
           ? DateTime.parse(json['recurringEndDate'])
           : null,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'userId': userId,
+        if (userId != null) 'userId': userId,
         'title': title,
-        'description': description,
+        if (description != null) 'description': description,
         'amount': amount,
-        'date': date.toIso8601String(),
         'transactionDate': transactionDate.toIso8601String(),
         'type': type,
         'category': category,
-        'attachmentUrl': attachmentUrl,
         'isRecurring': isRecurring,
-        'recurringInterval': recurringInterval,
-        'recurringEndDate': recurringEndDate?.toIso8601String(),
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
+        if (recurringInterval != null) 'recurringInterval': recurringInterval,
+        if (recurringEndDate != null)
+          'recurringEndDate': recurringEndDate!.toIso8601String(),
+        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
       };
 
   bool get isDeposit => type.toLowerCase() == 'deposit';
   bool get isWithdrawal => type.toLowerCase() == 'withdrawal';
-  
-  String get formattedAmount => '${isDeposit ? '+' : '-'}\$${amount.toStringAsFixed(2)}';
-  
+
+  String get formattedAmount =>
+      '${isDeposit ? '+' : '-'}\$${amount.toStringAsFixed(2)}';
+
   IconData get icon {
     switch (category.toLowerCase()) {
       case 'food':
@@ -200,11 +163,9 @@ class WalletTransaction extends Equatable {
         title,
         description,
         amount,
-        date,
         transactionDate,
         type,
         category,
-        attachmentUrl,
         isRecurring,
         recurringInterval,
         recurringEndDate,
@@ -212,40 +173,100 @@ class WalletTransaction extends Equatable {
         updatedAt,
       ];
 }
+
+class TransactionListResponse extends Equatable {
+  final List<WalletTransaction> transactions;
+  final int totalCount;
+  final int page;
+  final int pageSize;
+  final int totalPages;
+
+  const TransactionListResponse({
+    required this.transactions,
+    required this.totalCount,
+    required this.page,
+    required this.pageSize,
+    required this.totalPages,
+  });
+
+  factory TransactionListResponse.fromJson(Map<String, dynamic> json) {
+    return TransactionListResponse(
+      transactions: (json['transactions'] as List)
+          .map((e) => WalletTransaction.fromJson(e))
+          .toList(),
+      totalCount: json['totalCount'],
+      page: json['page'],
+      pageSize: json['pageSize'],
+      totalPages: json['totalPages'],
+    );
+  }
+
+  @override
+  List<Object?> get props => [transactions, totalCount, page, pageSize, totalPages];
+}
+
 class WalletSummary extends Equatable {
-  final double totalDeposits;
-  final double totalWithdrawals;
-  final double netBalance;
-  final DateTime periodStart;
-  final DateTime periodEnd;
+  final double totalIncome;
+  final double totalExpenses;
+  final double netSavings;
+  final List<CategorySummary> expensesByCategory;
+  final List<CategorySummary> incomeByCategory;
+  final int transactionCount;
 
   const WalletSummary({
-    required this.totalDeposits,
-    required this.totalWithdrawals,
-    required this.netBalance,
-    required this.periodStart,
-    required this.periodEnd,
+    required this.totalIncome,
+    required this.totalExpenses,
+    required this.netSavings,
+    required this.expensesByCategory,
+    required this.incomeByCategory,
+    required this.transactionCount,
   });
 
   factory WalletSummary.fromJson(Map<String, dynamic> json) {
     return WalletSummary(
-      totalDeposits: (json['totalDeposits'] as num).toDouble(),
-      totalWithdrawals: (json['totalWithdrawals'] as num).toDouble(),
-      netBalance: (json['netBalance'] as num).toDouble(),
-      periodStart: DateTime.parse(json['periodStart']),
-      periodEnd: DateTime.parse(json['periodEnd']),
+      totalIncome: (json['totalIncome'] as num).toDouble(),
+      totalExpenses: (json['totalExpenses'] as num).toDouble(),
+      netSavings: (json['netSavings'] as num).toDouble(),
+      expensesByCategory: (json['expensesByCategory'] as List)
+          .map((e) => CategorySummary.fromJson(e))
+          .toList(),
+      incomeByCategory: (json['incomeByCategory'] as List)
+          .map((e) => CategorySummary.fromJson(e))
+          .toList(),
+      transactionCount: json['transactionCount'],
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'totalDeposits': totalDeposits,
-        'totalWithdrawals': totalWithdrawals,
-        'netBalance': netBalance,
-        'periodStart': periodStart.toIso8601String(),
-        'periodEnd': periodEnd.toIso8601String(),
-      };
+  @override
+  List<Object?> get props => [
+        totalIncome,
+        totalExpenses,
+        netSavings,
+        expensesByCategory,
+        incomeByCategory,
+        transactionCount,
+      ];
+}
+
+class CategorySummary extends Equatable {
+  final String category;
+  final double total;
+  final int count;
+
+  const CategorySummary({
+    required this.category,
+    required this.total,
+    required this.count,
+  });
+
+  factory CategorySummary.fromJson(Map<String, dynamic> json) {
+    return CategorySummary(
+      category: json['category'],
+      total: (json['total'] as num).toDouble(),
+      count: json['count'],
+    );
+  }
 
   @override
-  List<Object?> get props =>
-      [totalDeposits, totalWithdrawals, netBalance, periodStart, periodEnd];
+  List<Object?> get props => [category, total, count];
 }
