@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
+import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/settings/presentation/screens/settings_screen.dart';
 import 'package:my_wallet/features/wallet/data/repositories/wallet_repository.dart';
 import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
+import 'dart:ui' as ui; // needed for ImageFilter
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           HomeTab(),
           AnalyticsTab(),
           TransactionsTab(),
-          BudgetTab(), // Changed from ProfileTab to BudgetTab
+          BudgetTab(),
         ],
       ),
       bottomNavigationBar: Container(
@@ -55,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildNavItem(0, Icons.home_outlined, Icons.home_filled, isDarkMode),
             _buildNavItem(1, Icons.pie_chart_outline, Icons.pie_chart, isDarkMode),
             _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long, isDarkMode),
-            _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, isDarkMode), // Changed icon
+            _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, isDarkMode),
           ],
         ),
       ),
@@ -123,18 +126,17 @@ class _HomeTabState extends State<HomeTab> {
   String? _errorMessage;
   TransactionType _selectedFilter = TransactionType.all;
 
-List<String> get _categories => [
-  context.l10n.categorySalary,
-  context.l10n.categoryFood,
-  context.l10n.categoryShopping,
-  context.l10n.categoryTransportation,
-  context.l10n.categoryEntertainment,
-  context.l10n.categoryBills,
-  context.l10n.categoryHealth,
-  context.l10n.categoryEducation,
-  context.l10n.categoryOther
-];
-
+  List<String> get _categories => [
+    context.l10n.categorySalary,
+    context.l10n.categoryFood,
+    context.l10n.categoryShopping,
+    context.l10n.categoryTransportation,
+    context.l10n.categoryEntertainment,
+    context.l10n.categoryBills,
+    context.l10n.categoryHealth,
+    context.l10n.categoryEducation,
+    context.l10n.categoryOther
+  ];
 
   @override
   void initState() {
@@ -142,30 +144,29 @@ List<String> get _categories => [
     _loadHomeData();
   }
 
-Future<void> _loadHomeData() async {
-  setState(() {
-    _isLoading = true;
-    _errorMessage = null;
-  });
 
-  try {
-    // يمكنك إزالة الـ delay في الإنتاج
-    await Future.delayed(const Duration(seconds: 2));
-    
-    final data = await _walletRepository.getHomeData(); // الآن تعيد WalletHomeData مباشرة
+  Future<void> _loadHomeData() async {
     setState(() {
-      _homeData = data;
+      _isLoading = true;
+      _errorMessage = null;
     });
-  } catch (e) {
-    setState(() {
-      _errorMessage = context.l10n.errorLoadingData(e.toString());
-    });
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
+
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      final data = await _walletRepository.getHomeData();
+      setState(() {
+        _homeData = data;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = context.l10n.errorLoadingData(e.toString());
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
 
   Future<void> _refreshData() async {
     await _loadHomeData();
@@ -208,7 +209,36 @@ void _showAddTransactionDialog(TransactionType type) {
   // UI state
   bool _isSubmitting = false;
   double? _previewAmount;
-  
+  Future<void> _pickDate() async {
+  final date = await showDatePicker(
+    context: context,
+    initialDate: selectedDate,
+    firstDate: DateTime(2000),
+    lastDate: DateTime.now().add(const Duration(days: 365)),
+  );
+  if (date != null) {
+    setState(() {
+      selectedDate = DateTime(
+        date.year, date.month, date.day,
+        selectedTime.hour, selectedTime.minute,
+      );
+    });
+  }
+}Future<void> _pickTime() async {
+  final time = await showTimePicker(
+    context: context,
+    initialTime: selectedTime,
+  );
+  if (time != null) {
+    setState(() {
+      selectedTime = time;
+      selectedDate = DateTime(
+        selectedDate.year, selectedDate.month, selectedDate.day,
+        time.hour, time.minute,
+      );
+    });
+  }
+}
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -374,42 +404,42 @@ void _showAddTransactionDialog(TransactionType type) {
                     const SizedBox(height: 16),
                     
                     // Amount Field
-// Amount Field
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 24),
-  child: TextFormField(
-    controller: amountController,
-    keyboardType: TextInputType.number,
-    inputFormatters: [
-      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // يسمح فقط بالأرقام ونقطة عشرية واحدة
-    ],
-    onChanged: (value) {
-      setState(() {
-        _previewAmount = double.tryParse(value);
-      });
-    },
-    decoration: InputDecoration(
-      labelText: context.l10n.amount,
-      labelStyle: TextStyle(
-        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-      ),
-      prefixIcon: Icon(
-        Icons.attach_money,
-        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-      ),
-      filled: true,
-      fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        vertical: 16,
-        horizontal: 16,
-      ),
-    ),
-  ),
-),
+                  // Amount Field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: TextFormField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // يسمح فقط بالأرقام ونقطة عشرية واحدة
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _previewAmount = double.tryParse(value);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: context.l10n.amount,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        prefixIcon: Icon(
+                          Icons.attach_money,
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
+                      ),
+                    ),
+                  ),
                     const SizedBox(height: 16),
                     
                     // Quick amount suggestions
@@ -418,7 +448,7 @@ Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
                         children: (isIncome 
-                            ? [50, 100, 500, 1000, 5000]
+                            ? [50, 100, 500, 1000]
                             : [10, 20, 50, 100, 200])
                             .map((value) => Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -489,43 +519,68 @@ Padding(
                     const SizedBox(height: 16),
                     
                     // Date & Time Picker
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: InkWell(
-                        onTap: _pickDateTime,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')} '
-                                  '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(
-                                    color: isDarkMode ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_drop_down,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 24),
+  child: Row(
+    children: [
+      // حقل التاريخ
+      Expanded(
+        flex: 3,
+        child: InkWell(
+          onTap: _pickDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today, size: 20, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      // حقل الوقت
+      Expanded(
+        flex: 2,
+        child: InkWell(
+          onTap: _pickTime,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, size: 20, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
                     const SizedBox(height: 16),
                     
                     // Recurring Switch and options
@@ -905,55 +960,21 @@ Padding(
     );
   }
 
-  // Skeleton Widgets
+
+  // Skeleton Widgets (تم تعديلها لتتناسب مع التصميم الجديد)
   Widget _buildSkeletonAppBar(bool isDarkMode) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.only(top: 50, right: 20, left: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 100,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 150,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
           ),
         ],
       ),
@@ -962,16 +983,12 @@ Padding(
 
   Widget _buildSkeletonBalanceCard(bool isDarkMode) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(28),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -980,16 +997,16 @@ Padding(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 80,
-                  height: 14,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
+                    shape: BoxShape.circle,
                   ),
                 ),
                 Container(
-                  width: 20,
-                  height: 20,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                     shape: BoxShape.circle,
@@ -999,14 +1016,23 @@ Padding(
             ),
             const SizedBox(height: 16),
             Container(
+              width: 100,
+              height: 14,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
               width: 200,
-              height: 32,
+              height: 40,
               decoration: BoxDecoration(
                 color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -1023,7 +1049,7 @@ Padding(
                       const SizedBox(height: 8),
                       Container(
                         width: 80,
-                        height: 18,
+                        height: 24,
                         decoration: BoxDecoration(
                           color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(6),
@@ -1031,11 +1057,6 @@ Padding(
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                 ),
                 Expanded(
                   child: Column(
@@ -1051,7 +1072,7 @@ Padding(
                       const SizedBox(height: 8),
                       Container(
                         width: 80,
-                        height: 18,
+                        height: 24,
                         decoration: BoxDecoration(
                           color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(6),
@@ -1073,28 +1094,15 @@ Padding(
       margin: const EdgeInsets.symmetric(vertical: 24),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(4, (index) {
-          return Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(2, (index) {
+          return Container(
+            width: 120,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+            ),
           );
         }),
       ),
@@ -1234,7 +1242,7 @@ Padding(
       child: Column(
         children: [
           _buildSkeletonAppBar(isDarkMode),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           _buildSkeletonBalanceCard(isDarkMode),
           _buildSkeletonQuickActions(isDarkMode),
           _buildSkeletonTransactionHeader(isDarkMode),
@@ -1244,6 +1252,22 @@ Padding(
       ),
     );
   }
+
+Widget _buildBlurrableNumber(String text, TextStyle style, bool blurred) {
+  return TweenAnimationBuilder<double>(
+    tween: Tween(begin: blurred ? 0 : 8, end: blurred ? 8 : 0),
+    duration: const Duration(milliseconds: 300),
+    builder: (context, sigma, child) {
+      if (sigma == 0) {
+        return Text(text, style: style);
+      }
+      return ImageFiltered(
+        imageFilter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+        child: Text(text, style: style),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1257,7 +1281,6 @@ Padding(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // Skeleton Loading or Content
               if (_isLoading)
                 _buildSkeletonLoading(isDarkMode),
 
@@ -1289,202 +1312,234 @@ Padding(
                 ),
 
               if (_homeData != null && !_isLoading) ...[
-                // App Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.welcomeBack,
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.l10n.userName,
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
+                // بطاقة الرصيد الجديدة التي تمتد للأعلى وتحتوي على أيقونة البروفايل
+// Balance Card (New Design - منفصلة عن الحافة)
+Padding(
+  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+  child: Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: isDarkMode
+            ? [Colors.grey[900]!, Colors.grey[850]!]
+            : [Colors.white, Colors.grey[50]!],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
+          blurRadius: 15,
+          offset: const Offset(0, 5),
+        ),
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // أيقونة المحفظة والعين والبروفايل
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  size: 20,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      hideService.isHidden
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      size: 20,
+                    ),
+                    onPressed: hideService.toggle,
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SettingsScreen(
+                          onLocaleChanged: (locale) {},
+                        ),
                       ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.notifications_outlined,
-                                size: 20,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                              onPressed: () {},
-                            ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                      child: Icon(
+                        Icons.person,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            context.l10n.totalBalance,
+            style: TextStyle(
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+_buildBlurrableNumber(
+  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+                TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 40,
+                  fontWeight: FontWeight.w800,
+                ),
+                hideService.isHidden,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade700,
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.settings_outlined,
-                                size: 20,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SettingsScreen(
-                                      onLocaleChanged: (locale) {},
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                          child: const Icon(
+                            Icons.arrow_downward,
+                            color: Colors.white,
+                            size: 12,
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.l10n.income,
+                          style: TextStyle(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+_buildBlurrableNumber(
+  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+                      TextStyle(
+                        color: Colors.green.shade800,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      hideService.isHidden,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade700,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_upward,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.l10n.expense,
+                          style: TextStyle(
+                            color: Colors.red.shade800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+_buildBlurrableNumber(
+  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+                      TextStyle(
+                        color: Colors.red.shade800,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      hideService.isHidden,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  ),
+),      // Quick Actions
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildQuickAction(
+                        Icons.add,
+                        context.l10n.addDeposit,
+                        () => _showAddTransactionDialog(TransactionType.income),
+                        isDarkMode,
+                      ),
+                      _buildQuickAction(
+                        Icons.remove,
+                        context.l10n.addWithdrawal,
+                        () => _showAddTransactionDialog(TransactionType.expense),
+                        isDarkMode,
                       ),
                     ],
                   ),
                 ),
 
-                // Balance Card
-// Balance Card
-// Balance Card
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 20),
-  child: Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(
-        color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-        width: 1,
-      ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              context.l10n.totalBalance,
-              style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            // زر العين لتبديل الإخفاء
-            IconButton(
-              icon: Icon(
-                hideService.isHidden
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                size: 20,
-              ),
-              onPressed: () => hideService.toggle(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              '\$',
-              style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              hideService.isHidden
-                  ? '••••'
-                  : _homeData!.balance.totalBalance.toStringAsFixed(2),
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: _buildBalanceStat(
-                context.l10n.income,
-                hideService.isHidden ? 0 : _homeData!.balance.totalDeposits,
-                isDarkMode,
-                isPositive: true,
-                hidden: hideService.isHidden,
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-            ),
-            Expanded(
-              child: _buildBalanceStat(
-                context.l10n.expense,
-                hideService.isHidden ? 0 : _homeData!.balance.totalWithdrawals,
-                isDarkMode,
-                isPositive: false,
-                hidden: hideService.isHidden,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-),
-// Quick Actions
-Container(
-  margin: const EdgeInsets.symmetric(vertical: 24),
-  padding: const EdgeInsets.symmetric(horizontal: 20),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-      _buildQuickAction(
-        Icons.add,
-        context.l10n.addDeposit,
-        () => _showAddTransactionDialog(TransactionType.income),
-        isDarkMode,
-      ),
-      _buildQuickAction(
-        Icons.remove,
-        context.l10n.addWithdrawal,
-        () => _showAddTransactionDialog(TransactionType.expense),
-        isDarkMode,
-      ),
-    ],
-  ),
-),
                 // Recent Transactions Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1593,211 +1648,167 @@ Container(
     );
   }
 
-Widget _buildBalanceStat(String label, double amount, bool isDarkMode, {required bool isPositive, required bool hidden}) {
-  return Column(
-    children: [
-      Text(
-        label,
-        style: TextStyle(
-          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-          fontSize: 12,
+  Widget _buildQuickAction(
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+    bool isDarkMode,
+  ) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            splashColor: isDarkMode
+                ? Colors.white.withOpacity(0.15)
+                : Colors.black.withOpacity(0.1),
+            highlightColor: Colors.transparent,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: 60,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
-      const SizedBox(height: 4),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!hidden) ...[
-            Text(
-              isPositive ? '+' : '-',
-              style: TextStyle(
-                color: isPositive ? Colors.green[800] : Colors.red[800],
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              '\$${amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: isPositive ? Colors.green[800] : Colors.red[800],
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ] else
-            Text(
-              '••••',
-              style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-        ],
-      ),
-    ],
-  );
-}
-Widget _buildQuickAction(
-  IconData icon,
-  String label,
-  VoidCallback onTap,
-  bool isDarkMode,
-) {
-  return Expanded(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    );
+  }
+
+  Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
+    final isIncome = transaction.isDeposit;
+    
+    return GestureDetector(
+      onLongPress: () {
+        _showDeleteConfirmationDialog(transaction);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
           borderRadius: BorderRadius.circular(16),
-          splashColor: isDarkMode
-              ? Colors.white.withOpacity(0.15)
-              : Colors.black.withOpacity(0.1),
-          highlightColor: Colors.transparent,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            height: 60,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                width: 1,
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isIncome 
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              child: Icon(
+                transaction.icon,
+                color: isIncome ? Colors.green[800] : Colors.red[800],
+                size: 20,
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.title,
                     style: TextStyle(
                       color: isDarkMode ? Colors.white : Colors.black,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (transaction.description != null && transaction.description!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        transaction.description!,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
-  final isIncome = transaction.isDeposit;
-  
-  return GestureDetector(
-    onLongPress: () {
-      _showDeleteConfirmationDialog(transaction);
-    },
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isIncome 
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              transaction.icon,
-              color: isIncome ? Colors.green[800] : Colors.red[800],
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  transaction.title,
+                  transaction.formattedAmount,
                   style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
+                    color: isIncome ? Colors.green[800] : Colors.red[800],
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
+                  _formatDate(transaction.transactionDate),
                   style: TextStyle(
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
-                // التحقق من أن الوصف ليس null وليس فارغاً
-                if (transaction.description != null && transaction.description!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      transaction.description!,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                transaction.formattedAmount,
-                style: TextStyle(
-                  color: isIncome ? Colors.green[800] : Colors.red[800],
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                _formatDate(transaction.transactionDate),
-                style: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),
@@ -1845,6 +1856,8 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
   }
 }
 
+// باقي الأجزاء (AnalyticsTab, TransactionsTab, BudgetTab) تبقى كما هي دون تغيير
+// ... 
 class AnalyticsTab extends StatelessWidget {
   const AnalyticsTab({super.key});
 

@@ -32,7 +32,10 @@ class SharedPrefs {
   static Future<void> removeAuthToken() async {
     await _prefs.remove(AppConstants.authTokenKey);
   }
-  
+  static Future<String?> getUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString(AppConstants.userDataKey);
+}
   // User Data
   static String? get userData {
     return _prefs.getString(AppConstants.userDataKey);
