@@ -1713,101 +1713,106 @@ _buildBlurrableNumber(
     );
   }
 
-  Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
-    final isIncome = transaction.isDeposit;
-    
-    return GestureDetector(
-      onLongPress: () {
-        _showDeleteConfirmationDialog(transaction);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-            width: 1,
-          ),
+Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
+  final isIncome = transaction.isDeposit;
+  final hideService = Provider.of<HideBalanceService>(context, listen: true); // للاستماع للتغييرات
+
+  return GestureDetector(
+    onLongPress: () {
+      _showDeleteConfirmationDialog(transaction);
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isIncome 
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                transaction.icon,
-                color: isIncome ? Colors.green[800] : Colors.red[800],
-                size: 20,
-              ),
+      ),
+      child: Row(
+        children: [
+          // أيقونة
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isIncome 
+                ? Colors.green.withOpacity(0.1)
+                : Colors.red.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.title,
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (transaction.description != null && transaction.description!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        transaction.description!,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            child: Icon(
+              transaction.icon,
+              color: isIncome ? Colors.green[800] : Colors.red[800],
+              size: 20,
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.formattedAmount,
+                  transaction.title,
                   style: TextStyle(
-                    color: isIncome ? Colors.green[800] : Colors.red[800],
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  _formatDate(transaction.transactionDate),
+                  '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
                   style: TextStyle(
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
+                if (transaction.description != null && transaction.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      transaction.description!,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ],
-        ),
+          ),
+          // عمود المبلغ
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // استبدال Text بـ _buildBlurrableNumber
+              _buildBlurrableNumber(
+                transaction.formattedAmount,
+                TextStyle(
+                  color: isIncome ? Colors.green[800] : Colors.red[800],
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+                hideService.isHidden,
+              ),
+              Text(
+                _formatDate(transaction.transactionDate),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
