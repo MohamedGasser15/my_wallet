@@ -27,6 +27,44 @@ class ApiService {
       requestHeader: true,
     ));
   }
+  Future<Response> put(
+  String endpoint,
+  Map<String, dynamic> body, {
+  bool requiresAuth = false,
+}) async {
+  try {
+    final headers = <String, String>{};
+    if (requiresAuth) {
+      final token = SharedPrefs.authToken;
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    print('🌐 PUT Request to: $endpoint');
+    print('📦 Body: ${jsonEncode(body)}');
+
+    final response = await _dio.put(
+      endpoint,
+      data: body,
+      options: Options(headers: headers),
+    );
+
+    print('📥 Response Status: ${response.statusCode}');
+    print('📥 Response Body: ${response.data}');
+
+    return response;
+  } on DioException catch (e) {
+    print('❌ PUT Error: $e');
+    if (e.response != null) {
+      print('❌ Response: ${e.response?.data}');
+    }
+    rethrow;
+  } catch (e) {
+    print('❌ PUT Error: $e');
+    rethrow;
+  }
+}
   Future<Response> delete(
   String endpoint, {
   Map<String, dynamic>? queryParams,

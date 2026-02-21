@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
+import 'package:my_wallet/features/home/presentation/screens/TransactionsPage.dart';
+import 'package:my_wallet/features/wallet/data/presentation/screens/budget_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
@@ -27,20 +29,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: const [
-          HomeTab(),
-          AnalyticsTab(),
-          TransactionsTab(),
-          BudgetTab(),
-        ],
-      ),
+body: PageView(
+  controller: _pageController,
+  onPageChanged: (index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  },
+  children: [
+    HomeTab(pageController: _pageController), // بدون const
+    const AnalyticsTab(),
+    const TransactionsTab(),
+    const BudgetPage(),
+  ],
+),
       bottomNavigationBar: Container(
         height: 70,
         decoration: BoxDecoration(
@@ -113,7 +115,8 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  final PageController pageController;
+  const HomeTab({super.key, required this.pageController});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -144,6 +147,15 @@ class _HomeTabState extends State<HomeTab> {
     _loadHomeData();
   }
 
+Future<List<WalletTransaction>> _loadAllTransactions() async {
+  try {
+    final response = await _walletRepository.getTransactions(pageSize: 100);
+    return response.transactions;
+  } catch (e) {
+    _showErrorSnackbar('Failed to load transactions: $e');
+    return [];
+  }
+}
 
   Future<void> _loadHomeData() async {
     setState(() {
@@ -959,8 +971,79 @@ Padding(
       ),
     );
   }
-
-
+void _showAllTransactionsModal(List<WalletTransaction> transactions) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.black : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Handle
+                Container(
+                  height: 4,
+                  width: 40,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'All Transactions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Transactions list
+                Expanded(
+                  child: transactions.isEmpty
+                      ? _buildEmptyState(isDarkMode)
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          itemCount: transactions.length,
+                          itemBuilder: (context, index) {
+                            final transaction = transactions[index];
+                            return _buildTransactionCard(transaction, isDarkMode);
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
   // Skeleton Widgets (تم تعديلها لتتناسب مع التصميم الجديد)
   Widget _buildSkeletonAppBar(bool isDarkMode) {
     return Padding(
@@ -1340,22 +1423,46 @@ Padding(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // أيقونة المحفظة والعين والبروفايل
+          // الصف العلوي: (أيقونة المحفظة + اسم التطبيق) + أيقونة العين + صورة البروفايل
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // ===== الجزء المعدل: أيقونة + اسم التطبيق معاً داخل حاوية واحدة =====
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(30), // شكل كبسولة ناعم
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  size: 20,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined, // أيقونة المحفظة
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      context.l10n.appTitle, // "محفظتي" أو "Mahfazati"
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // ===== نهاية التعديل =====
               Row(
                 children: [
                   IconButton(
@@ -1405,17 +1512,8 @@ Padding(
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '\$',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 4),
-_buildBlurrableNumber(
-  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+              _buildBlurrableNumber(
+                '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
                 TextStyle(
                   color: isDarkMode ? Colors.white : Colors.black,
                   fontSize: 40,
@@ -1457,8 +1555,8 @@ _buildBlurrableNumber(
                       ],
                     ),
                     const SizedBox(height: 8),
-_buildBlurrableNumber(
-  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+                    _buildBlurrableNumber(
+                      '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
                       TextStyle(
                         color: Colors.green.shade800,
                         fontSize: 24,
@@ -1499,8 +1597,8 @@ _buildBlurrableNumber(
                       ],
                     ),
                     const SizedBox(height: 8),
-_buildBlurrableNumber(
-  '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
+                    _buildBlurrableNumber(
+                      '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
                       TextStyle(
                         color: Colors.red.shade800,
                         fontSize: 24,
@@ -1517,8 +1615,8 @@ _buildBlurrableNumber(
       ),
     ),
   ),
-),      // Quick Actions
-                Container(
+),
+              Container(
                   margin: const EdgeInsets.symmetric(vertical: 24),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -1554,21 +1652,28 @@ _buildBlurrableNumber(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                        ),
-                        child: Text(
-                          context.l10n.seeAll,
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+if (_homeData != null && _homeData!.totalTransactionCount > 5)
+  TextButton(
+    onPressed: () async {
+      final allTransactions = await _loadAllTransactions();
+      if (!mounted) return;
+      _showAllTransactionsModal(allTransactions);
+    },
+    style: TextButton.styleFrom(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+    ),
+    child: Text(
+      context.l10n.seeAll,
+      style: TextStyle(
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  )
+else
+  const SizedBox.shrink(),
                     ],
                   ),
                 ),
@@ -1861,8 +1966,6 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
   }
 }
 
-// باقي الأجزاء (AnalyticsTab, TransactionsTab, BudgetTab) تبقى كما هي دون تغيير
-// ... 
 class AnalyticsTab extends StatelessWidget {
   const AnalyticsTab({super.key});
 
@@ -2135,888 +2238,6 @@ class AnalyticsTab extends StatelessWidget {
   }
 }
 
-class TransactionsTab extends StatelessWidget {
-  const TransactionsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    final List<Map<String, dynamic>> transactions = [
-      {
-        'title': context.l10n.salaryDeposit,
-        'category': context.l10n.categorySalary,
-        'amount': 5000.0,
-        'type': 'income',
-        'icon': Icons.account_balance_wallet,
-        'date': context.l10n.today,
-      },
-      {
-        'title': context.l10n.groceryShopping,
-        'category': context.l10n.categoryFood,
-        'amount': -150.0,
-        'type': 'expense',
-        'icon': Icons.restaurant,
-        'date': context.l10n.today,
-      },
-      {
-        'title': context.l10n.netflixSubscription,
-        'category': context.l10n.categoryEntertainment,
-        'amount': -15.99,
-        'type': 'expense',
-        'icon': Icons.movie,
-        'date': context.l10n.yesterday,
-      },
-      {
-        'title': context.l10n.freelancePayment,
-        'category': context.l10n.categoryFreelance,
-        'amount': 1200.0,
-        'type': 'income',
-        'icon': Icons.work_outline,
-        'date': context.l10n.daysAgo,
-      },
-      {
-        'title': context.l10n.electricityBill,
-        'category': context.l10n.categoryUtilities,
-        'amount': -85.50,
-        'type': 'expense',
-        'icon': Icons.bolt,
-        'date': context.l10n.daysAgo,
-      },
-      {
-        'title': context.l10n.onlinePurchase,
-        'category': context.l10n.categoryShopping,
-        'amount': -249.99,
-        'type': 'expense',
-        'icon': Icons.shopping_bag,
-        'date': context.l10n.daysAgo,
-      },
-    ];
-
-    return SafeArea(
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.transactions,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.allTransactionsInOnePlace,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.filter_list,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.search,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: context.l10n.searchTransactions,
-                        hintStyle: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        border: InputBorder.none,
-                      ),
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Transactions List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: transactions.length,
-              itemBuilder: (context, index) {
-                final transaction = transactions[index];
-                final isIncome = transaction['type'] == 'income';
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isIncome 
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          transaction['icon'] as IconData,
-                          color: isIncome ? Colors.green[800] : Colors.red[800],
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              transaction['title'] as String,
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${transaction['category']} • ${transaction['date']}',
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${isIncome ? '+' : '-'}\$${(transaction['amount'] as double).abs().toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: isIncome ? Colors.green[800] : Colors.red[800],
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            isIncome ? context.l10n.income : context.l10n.expense,
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class BudgetTab extends StatefulWidget {
-  const BudgetTab({super.key});
-
-  @override
-  State<BudgetTab> createState() => _BudgetTabState();
-}
-
-class _BudgetTabState extends State<BudgetTab> {
-  double _monthlyBudget = 3000.0;
-  double _currentSpending = 1850.0;
-  
-  // تحديث أسماء الفئات لاستخدام الترجمة
-  final Map<String, double> _categoryBudgets = {
-    'Food': 500.0,
-    'Shopping': 400.0,
-    'Transportation': 200.0,
-    'Entertainment': 300.0,
-    'Bills': 800.0,
-    'Other': 800.0,
-  };
-  final Map<String, double> _categorySpent = {
-    'Food': 420.0,
-    'Shopping': 320.0,
-    'Transportation': 180.0,
-    'Entertainment': 250.0,
-    'Bills': 480.0,
-    'Other': 200.0,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final double remainingBudget = _monthlyBudget - _currentSpending;
-    final double progress = _currentSpending / _monthlyBudget;
-    final bool isOverBudget = _currentSpending > _monthlyBudget;
-    
-    // الحصول على أسماء الفئات المترجمة
-    final Map<String, String> translatedCategories = {
-      'Food': context.l10n.categoryFood,
-      'Shopping': context.l10n.categoryShopping,
-      'Transportation': context.l10n.categoryTransportation,
-      'Entertainment': context.l10n.categoryEntertainment,
-      'Bills': context.l10n.categoryBills,
-      'Other': context.l10n.categoryOther,
-    };
-    
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.budget, // استخدام الترجمة
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.budgetOverview, // استخدام الترجمة
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.edit,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        size: 20,
-                      ),
-                      onPressed: _showEditBudgetDialog,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Monthly Budget Overview
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Budget Progress
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.l10n.monthlyBudget, // استخدام الترجمة هنا
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '\$$_monthlyBudget',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Progress Bar
-                  Stack(
-                    children: [
-                      Container(
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 500),
-                        height: 12,
-                        width: MediaQuery.of(context).size.width * 0.8 * progress.clamp(0.0, 1.0),
-                        decoration: BoxDecoration(
-                          color: isOverBudget ? Colors.red[800] : Colors.green[800],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Spending Stats
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.spent, // استخدام الترجمة
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            '\$${_currentSpending.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: isOverBudget ? Colors.red[800] : Colors.green[800],
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            context.l10n.left, // استخدام الترجمة
-                            style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            '\$${remainingBudget.abs().toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: remainingBudget >= 0 ? Colors.green[800] : Colors.red[800],
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    remainingBudget >= 0 
-                      ? context.l10n.underBudget // استخدام الترجمة
-                      : context.l10n.overBudget, // استخدام الترجمة
-                    style: TextStyle(
-                      color: remainingBudget >= 0 ? Colors.green[800] : Colors.red[800],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Category Budgets Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.l10n.categories, // استخدام الترجمة
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    context.l10n.monthlyBudget, // استخدام الترجمة
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Category Budgets List
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: Column(
-                children: _categoryBudgets.entries.map((entry) {
-                  final category = entry.key;
-                  final budget = entry.value;
-                  final spent = _categorySpent[category] ?? 0.0;
-                  final categoryProgress = spent / budget;
-                  final isCategoryOverBudget = spent > budget;
-                  final translatedCategory = translatedCategories[category] ?? category;
-                  
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      leading: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(category).withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(category),
-                          color: _getCategoryColor(category),
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        translatedCategory, // استخدام الاسم المترجم
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Stack(
-                            children: [
-                              Container(
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 500),
-                                height: 4,
-                                width: 60 * categoryProgress.clamp(0.0, 1.0),
-                                decoration: BoxDecoration(
-                                  color: isCategoryOverBudget ? Colors.red[800] : Colors.green[800],
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '\$${spent.toStringAsFixed(0)} / \$${budget.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            isCategoryOverBudget 
-                              ? context.l10n.overBudget // استخدام الترجمة
-                              : '${(budget - spent).toStringAsFixed(0)} ${context.l10n.left}', // استخدام الترجمة
-                            style: TextStyle(
-                              color: isCategoryOverBudget ? Colors.red[800] : Colors.green[800],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Tips Card - تحديث النص ليستخدم الترجمة
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.lightbulb_outline,
-                      color: Colors.blue[800],
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.budget, // استخدام الترجمة
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isOverBudget 
-                            ? '${context.l10n.overBudget}. ${context.l10n.tryReducingExpenses}.' // يمكن إضافة نص إضافي للترجمة
-                            : '${context.l10n.underBudget}. ${context.l10n.considerSaving}.', // يمكن إضافة نص إضافي للترجمة
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditBudgetDialog() {
-    final TextEditingController budgetController = TextEditingController(
-      text: _monthlyBudget.toStringAsFixed(0)
-    );
-    bool _isSubmitting = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.black : Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        height: 4,
-                        width: 40,
-                        margin: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          children: [
-                            Text(
-                              context.l10n.monthlyBudget, // استخدام الترجمة
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            // Budget Amount Field
-                            TextFormField(
-                              controller: budgetController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: context.l10n.monthlyBudget, // استخدام الترجمة
-                                labelStyle: TextStyle(
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.attach_money,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                                filled: true,
-                                fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                  horizontal: 16,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return context.l10n.enterAmount; // استخدام الترجمة
-                                }
-                                if (double.tryParse(value) == null) {
-                                  return context.l10n.enterValidNumber; // استخدام الترجمة
-                                }
-                                if (double.parse(value) <= 0) {
-                                  return context.l10n.amountGreaterThanZero; // استخدام الترجمة
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 32),
-                            // Buttons
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _isSubmitting
-                                        ? null
-                                        : () => Navigator.pop(context),
-                                    style: OutlinedButton.styleFrom(
-                                      side: BorderSide(
-                                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      context.l10n.cancel, // استخدام الترجمة
-                                      style: TextStyle(
-                                        color: isDarkMode ? Colors.white : Colors.black,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: _isSubmitting
-                                        ? null
-                                        : () async {
-                                            if (budgetController.text.isEmpty) {
-                                              return;
-                                            }
-                                            
-                                            final budget = double.tryParse(budgetController.text);
-                                            if (budget == null || budget <= 0) {
-                                              return;
-                                            }
-                                            
-                                            setState(() {
-                                              _isSubmitting = true;
-                                            });
-                                            
-                                            await Future.delayed(const Duration(milliseconds: 500));
-                                            
-                                            setState(() {
-                                              _monthlyBudget = budget;
-                                            });
-                                            
-                                            Navigator.pop(context);
-                                            
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  '${context.l10n.budget} \$${budget.toStringAsFixed(2)}', // استخدام الترجمة
-                                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                                ),
-                                                backgroundColor: Colors.green,
-                                                behavior: SnackBarBehavior.floating,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: _isSubmitting
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : Text(
-                                            context.l10n.save, // استخدام الترجمة
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Food':
-        return Colors.orange[800]!;
-      case 'Shopping':
-        return Colors.purple[800]!;
-      case 'Transportation':
-        return Colors.blue[800]!;
-      case 'Entertainment':
-        return Colors.pink[800]!;
-      case 'Bills':
-        return Colors.cyan[800]!;
-      default:
-        return Colors.grey[800]!;
-    }
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Food':
-        return Icons.restaurant;
-      case 'Shopping':
-        return Icons.shopping_bag;
-      case 'Transportation':
-        return Icons.directions_car;
-      case 'Entertainment':
-        return Icons.movie;
-      case 'Bills':
-        return Icons.receipt;
-      default:
-        return Icons.category;
-    }
-  }
-}
 enum TransactionType { all, income, expense }
 
 class TransactionFilter {

@@ -2,6 +2,7 @@
 import 'package:dio/dio.dart';
 import 'package:my_wallet/core/constants/api_constants.dart';
 import 'package:my_wallet/core/services/api_service.dart';
+import 'package:my_wallet/features/wallet/data/models/budget_models.dart';
 import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
 
 class WalletRepository {
@@ -147,7 +148,29 @@ class WalletRepository {
       throw Exception('Failed to delete transaction: $e');
     }
   }
-  
+Future<BudgetDto> getBudget() async {
+  try {
+    final response = await _apiService.get(
+      ApiEndpoints.budget,
+      requiresAuth: true,
+    );
+    return BudgetDto.fromJson(response.data);
+  } on DioException catch (e) {
+    throw _handleDioError(e);
+  }
+}
+
+Future<void> updateMonthlyBudget(double monthlyBudget) async {
+  try {
+    await _apiService.put(
+      ApiEndpoints.budget,
+      {'monthlyBudget': monthlyBudget},
+      requiresAuth: true,
+    );
+  } on DioException catch (e) {
+    throw _handleDioError(e);
+  }
+}
   // جلب ملخص للتحليلات
   Future<WalletSummary> getSummary({
     required DateTime fromDate,

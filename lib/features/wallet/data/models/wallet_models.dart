@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 class WalletHomeData extends Equatable {
   final WalletBalance balance;
   final List<WalletTransaction> recentTransactions;
+  final int totalTransactionCount; 
 
   const WalletHomeData({
     required this.balance,
     required this.recentTransactions,
+    required this.totalTransactionCount,
   });
 
   factory WalletHomeData.fromJson(Map<String, dynamic> json) {
@@ -17,11 +19,12 @@ class WalletHomeData extends Equatable {
       recentTransactions: (json['recentTransactions'] as List)
           .map((e) => WalletTransaction.fromJson(e))
           .toList(),
+      totalTransactionCount: json['totalTransactionCount'] ?? 0,
     );
   }
 
   @override
-  List<Object?> get props => [balance, recentTransactions];
+  List<Object?> get props => [balance, recentTransactions, totalTransactionCount];
 }
 
 class WalletBalance extends Equatable {

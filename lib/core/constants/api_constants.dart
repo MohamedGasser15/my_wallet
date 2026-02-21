@@ -15,7 +15,7 @@ class ApiEndpoints {
   static const String walletAddTransaction = 'api/wallet/transactions/add';
   static const String walletDeleteTransaction = 'api/wallet/transactions/delete';
   static const String walletSummary = 'api/wallet/summary';
-
+  static const String budget = 'api/budget';
   // Profile
   static const String profileGet = 'api/profile/get';
   static const String profileUpdate = 'api/profile/update';
