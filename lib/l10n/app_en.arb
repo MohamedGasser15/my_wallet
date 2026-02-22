@@ -233,5 +233,6 @@
     "recurringTransaction": "Recurring Transaction",
   "recurringTransactionDescription": "Repeat this transaction automatically",
   "recurringInterval": "Interval",
-  "endDate": "End date"
+  "endDate": "End date",
+  "selectCategory": "Select category"
 }

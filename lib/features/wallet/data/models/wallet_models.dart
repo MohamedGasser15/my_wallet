@@ -58,18 +58,20 @@ class WalletBalance extends Equatable {
 
 class WalletTransaction extends Equatable {
   final int id;
-  final String? userId; // اختياري – قد لا يأتي في بعض الاستجابات
+  final String? userId;
   final String title;
   final String? description;
   final double amount;
   final DateTime transactionDate;
   final String type;
-  final String category;
+  final int? categoryId;          // إضافة
+  final String? categoryNameAr;    // إضافة
+  final String? categoryNameEn;    // إضافة
   final bool isRecurring;
   final String? recurringInterval;
   final DateTime? recurringEndDate;
-  final DateTime? createdAt; // اختياري – قد لا يأتي في بعض الاستجابات
-  final DateTime? updatedAt; // اختياري
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const WalletTransaction({
     required this.id,
@@ -79,7 +81,9 @@ class WalletTransaction extends Equatable {
     required this.amount,
     required this.transactionDate,
     required this.type,
-    required this.category,
+    this.categoryId,               // إضافة
+    this.categoryNameAr,            // إضافة
+    this.categoryNameEn,            // إضافة
     this.isRecurring = false,
     this.recurringInterval,
     this.recurringEndDate,
@@ -90,13 +94,15 @@ class WalletTransaction extends Equatable {
   factory WalletTransaction.fromJson(Map<String, dynamic> json) {
     return WalletTransaction(
       id: json['id'],
-      userId: json['userId']?.toString(), // لو موجود، يحوله ل String
+      userId: json['userId']?.toString(),
       title: json['title'],
       description: json['description'],
       amount: (json['amount'] as num).toDouble(),
       transactionDate: DateTime.parse(json['transactionDate']),
       type: json['type'],
-      category: json['category'],
+      categoryId: json['categoryId'],                       // إضافة
+      categoryNameAr: json['categoryNameAr'],                // إضافة
+      categoryNameEn: json['categoryNameEn'],                // إضافة
       isRecurring: json['isRecurring'] ?? false,
       recurringInterval: json['recurringInterval'],
       recurringEndDate: json['recurringEndDate'] != null
@@ -112,21 +118,23 @@ class WalletTransaction extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        if (userId != null) 'userId': userId,
-        'title': title,
-        if (description != null) 'description': description,
-        'amount': amount,
-        'transactionDate': transactionDate.toIso8601String(),
-        'type': type,
-        'category': category,
-        'isRecurring': isRecurring,
-        if (recurringInterval != null) 'recurringInterval': recurringInterval,
-        if (recurringEndDate != null)
-          'recurringEndDate': recurringEndDate!.toIso8601String(),
-        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
-        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
-      };
+    'id': id,
+    if (userId != null) 'userId': userId,
+    'title': title,
+    if (description != null) 'description': description,
+    'amount': amount,
+    'transactionDate': transactionDate.toIso8601String(),
+    'type': type,
+    if (categoryId != null) 'categoryId': categoryId,       // إضافة
+    if (categoryNameAr != null) 'categoryNameAr': categoryNameAr,
+    if (categoryNameEn != null) 'categoryNameEn': categoryNameEn,
+    'isRecurring': isRecurring,
+    if (recurringInterval != null) 'recurringInterval': recurringInterval,
+    if (recurringEndDate != null)
+      'recurringEndDate': recurringEndDate!.toIso8601String(),
+    if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+  };
 
   bool get isDeposit => type.toLowerCase() == 'deposit';
   bool get isWithdrawal => type.toLowerCase() == 'withdrawal';
@@ -134,8 +142,10 @@ class WalletTransaction extends Equatable {
   String get formattedAmount =>
       '${isDeposit ? '+' : '-'}\$${amount.toStringAsFixed(2)}';
 
+  // استخدام الاسم الإنجليزي للـ icon mapping (أو العربي حسب الحاجة)
   IconData get icon {
-    switch (category.toLowerCase()) {
+    final cat = (categoryNameEn ?? '').toLowerCase();
+    switch (cat) {
       case 'food':
         return Icons.restaurant;
       case 'salary':
@@ -161,22 +171,23 @@ class WalletTransaction extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        title,
-        description,
-        amount,
-        transactionDate,
-        type,
-        category,
-        isRecurring,
-        recurringInterval,
-        recurringEndDate,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    title,
+    description,
+    amount,
+    transactionDate,
+    type,
+    categoryId,
+    categoryNameAr,
+    categoryNameEn,
+    isRecurring,
+    recurringInterval,
+    recurringEndDate,
+    createdAt,
+    updatedAt,
+  ];
 }
-
 class TransactionListResponse extends Equatable {
   final List<WalletTransaction> transactions;
   final int totalCount;

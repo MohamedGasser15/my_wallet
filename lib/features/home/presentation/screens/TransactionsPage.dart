@@ -1,3 +1,5 @@
+// features/home/presentation/screens/TransactionsPage.dart (TransactionsTab)
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
@@ -62,6 +64,7 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
   }
 
   void _onSearchChanged() {
+    if (!mounted) return; // ✅ التحقق من mounted
     setState(() {
       _searchQuery = _searchController.text;
       _applySearchFilter();
@@ -69,6 +72,8 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
   }
 
   Future<void> _loadTransactions({int page = 1}) async {
+    if (!mounted) return; // ✅ التحقق الأولي
+
     if (page == 1) {
       setState(() {
         _isLoading = true;
@@ -89,6 +94,8 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
         toDate: _toDate,
       );
 
+      if (!mounted) return; // ✅ التحقق بعد await
+
       setState(() {
         if (page == 1) {
           _transactions = response.transactions;
@@ -102,6 +109,7 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
         _isLoadingMore = false;
       });
     } catch (e) {
+      if (!mounted) return; // ✅ التحقق في catch
       setState(() {
         _errorMessage = 'Failed to load transactions: $e';
         _isLoading = false;
@@ -114,17 +122,19 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
     if (_searchQuery.isEmpty) {
       _filteredTransactions = List.from(_transactions);
     } else {
-      _filteredTransactions = _transactions.where((t) =>
-        t.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        (t.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-        t.category.toLowerCase().contains(_searchQuery.toLowerCase())
-      ).toList();
+      _filteredTransactions = _transactions.where((t) {
+        final query = _searchQuery.toLowerCase();
+        return t.title.toLowerCase().contains(query) ||
+            (t.description?.toLowerCase().contains(query) ?? false) ||
+            (t.categoryNameAr?.toLowerCase().contains(query) ?? false) ||
+            (t.categoryNameEn?.toLowerCase().contains(query) ?? false);
+      }).toList();
     }
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200 &&
+            _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingMore &&
         _currentPage < _totalPages) {
       _loadTransactions(page: _currentPage + 1);
@@ -464,7 +474,6 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
           ],
         ),
       ),
-      // تم إزالة FloatingActionButton
     );
   }
 
@@ -475,7 +484,7 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
         label,
         style: TextStyle(
           color: isSelected
-              ? (isDarkMode ? Colors.black : Colors.white)  // نص أبيض على خلفية سوداء والعكس
+              ? (isDarkMode ? Colors.black : Colors.white)
               : (isDarkMode ? Colors.white : Colors.black),
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
@@ -489,8 +498,8 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
         });
       },
       backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-      selectedColor: isDarkMode ? Colors.white : Colors.black, // خلفية حسب الوضع
-      checkmarkColor: isDarkMode ? Colors.black : Colors.white, // لون علامة الصح
+      selectedColor: isDarkMode ? Colors.white : Colors.black,
+      checkmarkColor: isDarkMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
@@ -656,7 +665,10 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                transaction.category,
+                                // اختيار اللغة المناسبة
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? (transaction.categoryNameAr ?? transaction.categoryNameEn ?? '')
+                                    : (transaction.categoryNameEn ?? transaction.categoryNameAr ?? ''),
                                 style: TextStyle(
                                   color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
                                   fontSize: 11,

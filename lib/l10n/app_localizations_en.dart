@@ -703,4 +703,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get endDate => 'End date';
+
+  @override
+  String get selectCategory => 'Select category';
 }

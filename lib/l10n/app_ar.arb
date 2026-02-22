@@ -233,5 +233,6 @@
     "recurringTransaction": "معاملة متكررة",
   "recurringTransactionDescription": "كرر هذه المعاملة تلقائياً",
   "recurringInterval": "الفاصل الزمني",
-  "endDate": "تاريخ الانتهاء"
+  "endDate": "تاريخ الانتهاء",
+  "selectCategory": "اختر التصنيف"
 }

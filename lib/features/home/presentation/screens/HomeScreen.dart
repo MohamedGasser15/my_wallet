@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/home/presentation/screens/TransactionsPage.dart';
+import 'package:my_wallet/features/wallet/data/models/category_model.dart';
 import 'package:my_wallet/features/wallet/data/presentation/screens/budget_page.dart';
+import 'package:my_wallet/features/wallet/data/repositories/category_repository.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
@@ -129,23 +131,27 @@ class _HomeTabState extends State<HomeTab> {
   String? _errorMessage;
   TransactionType _selectedFilter = TransactionType.all;
 
-  List<String> get _categories => [
-    context.l10n.categorySalary,
-    context.l10n.categoryFood,
-    context.l10n.categoryShopping,
-    context.l10n.categoryTransportation,
-    context.l10n.categoryEntertainment,
-    context.l10n.categoryBills,
-    context.l10n.categoryHealth,
-    context.l10n.categoryEducation,
-    context.l10n.categoryOther
-  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadHomeData();
+  List<Category> _categories = [];
+  bool _isLoadingCategories = false;
+@override
+void initState() {
+  super.initState();
+  _loadHomeData();
+  _loadCategories(); // إضافة
+}
+
+Future<void> _loadCategories() async {
+  setState(() => _isLoadingCategories = true);
+  try {
+    final repo = CategoryRepository();
+    _categories = await repo.getAllCategories();
+  } catch (e) {
+    debugPrint('Error loading categories: $e');
+  } finally {
+    setState(() => _isLoadingCategories = false);
   }
+}
 
 Future<List<WalletTransaction>> _loadAllTransactions() async {
   try {
@@ -209,7 +215,7 @@ void _showAddTransactionDialog(TransactionType type) {
   final descriptionController = TextEditingController();
   
   // Selected values
-  String? selectedCategory = _categories.first;
+int? selectedCategoryId = _categories.isNotEmpty ? _categories.first.id : null;
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   
@@ -481,52 +487,67 @@ void _showAddTransactionDialog(TransactionType type) {
                     ),
                     
                     const SizedBox(height: 16),
-                    
-                    // Category Dropdown
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
+                   // Category Dropdown
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: _isLoadingCategories
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : DropdownButtonFormField<int>(
+                      value: selectedCategoryId,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.category,
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         ),
-                        child: DropdownButtonFormField<String>(
-                          value: selectedCategory,
-                          decoration: InputDecoration(
-                            labelText: context.l10n.category,
-                            labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        prefixIcon: Icon(
+                          Icons.category,
+                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.transparent,
+                      ),
+                      items: _categories.map((category) {
+                        return DropdownMenuItem<int>(
+                          value: category.id,
+                          child: Text(
+                            // اختيار اللغة المناسبة
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? category.nameAr
+                                : category.nameEn,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
                             ),
-                            prefixIcon: Icon(
-                              Icons.category,
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.transparent,
                           ),
-                          items: _categories.map((category) {
-                            return DropdownMenuItem(
-                              value: category,
-                              child: Text(
-                                category,
-                                style: TextStyle(
-                                  color: isDarkMode ? Colors.white : Colors.black,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedCategory = value;
-                            });
-                          },
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategoryId = value;
+                        });
+                      },
+                      hint: Text(
+                        context.l10n.selectCategory,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
                         ),
                       ),
                     ),
+            ),
+          ),
                     
                     const SizedBox(height: 16),
                     
@@ -812,16 +833,16 @@ Padding(
                                       
                                       try {
                                         await _walletRepository.addTransaction(
-                                          title: titleController.text,
-                                          description: descriptionController.text,
-                                          amount: amount,
-                                          type: isIncome ? 'Deposit' : 'Withdrawal',
-                                          category: selectedCategory!,
-                                          transactionDate: selectedDate, // التاريخ المختار
-                                          isRecurring: isRecurring,
-                                          recurringInterval: recurringInterval,
-                                          recurringEndDate: recurringEndDate,
-                                        );
+                                        title: titleController.text,
+                                        description: descriptionController.text,
+                                        amount: amount,
+                                        type: isIncome ? 'Deposit' : 'Withdrawal',
+                                        categoryId: selectedCategoryId!, // إرسال categoryId
+                                        transactionDate: selectedDate,
+                                        isRecurring: isRecurring,
+                                        recurringInterval: recurringInterval,
+                                        recurringEndDate: recurringEndDate,
+                                      );
                                         
                                         Navigator.pop(context);
                                         await _loadHomeData();
@@ -1820,7 +1841,11 @@ else
 
 Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
   final isIncome = transaction.isDeposit;
-  final hideService = Provider.of<HideBalanceService>(context, listen: true); // للاستماع للتغييرات
+  final hideService = Provider.of<HideBalanceService>(context, listen: true);
+  final locale = Localizations.localeOf(context).languageCode;
+  final categoryName = locale == 'ar'
+      ? (transaction.categoryNameAr ?? transaction.categoryNameEn ?? '')
+      : (transaction.categoryNameEn ?? transaction.categoryNameAr ?? '');
 
   return GestureDetector(
     onLongPress: () {
@@ -1869,7 +1894,7 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${transaction.category} • ${_formatDate(transaction.transactionDate)}',
+                  '$categoryName • ${_formatDate(transaction.transactionDate)}',
                   style: TextStyle(
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
@@ -1894,7 +1919,6 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // استبدال Text بـ _buildBlurrableNumber
               _buildBlurrableNumber(
                 transaction.formattedAmount,
                 TextStyle(
@@ -1918,7 +1942,6 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
     ),
   );
 }
-
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),

@@ -701,4 +701,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get endDate => 'تاريخ الانتهاء';
+
+  @override
+  String get selectCategory => 'اختر التصنيف';
 }
