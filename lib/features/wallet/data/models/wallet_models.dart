@@ -261,26 +261,31 @@ class WalletSummary extends Equatable {
         transactionCount,
       ];
 }
-
 class CategorySummary extends Equatable {
-  final String category;
+  final int categoryId;           // أضف هذا
+  final String categoryNameAr;    // أضف هذا
+  final String categoryNameEn;    // أضف هذا
   final double total;
   final int count;
 
   const CategorySummary({
-    required this.category,
+    required this.categoryId,
+    required this.categoryNameAr,
+    required this.categoryNameEn,
     required this.total,
     required this.count,
   });
 
   factory CategorySummary.fromJson(Map<String, dynamic> json) {
     return CategorySummary(
-      category: json['category'],
+      categoryId: json['categoryId'],           // افترض أن API بترجع categoryId
+      categoryNameAr: json['categoryNameAr'],   // تأكد من المفاتيح
+      categoryNameEn: json['categoryNameEn'],
       total: (json['total'] as num).toDouble(),
       count: json['count'],
     );
   }
 
   @override
-  List<Object?> get props => [category, total, count];
+  List<Object?> get props => [categoryId, categoryNameAr, categoryNameEn, total, count];
 }

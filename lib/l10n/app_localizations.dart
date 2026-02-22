@@ -1447,6 +1447,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select category'**
   String get selectCategory;
+
+  /// No description provided for @netSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Savings'**
+  String get netSavings;
+
+  /// No description provided for @expensesByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by Category'**
+  String get expensesByCategory;
+
+  /// No description provided for @incomeByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Income by Category'**
+  String get incomeByCategory;
+
+  /// No description provided for @noExpensesInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses in this period'**
+  String get noExpensesInPeriod;
+
+  /// No description provided for @noIncomeInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No income in this period'**
+  String get noIncomeInPeriod;
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noDataAvailable;
 }
 
 class _AppLocalizationsDelegate

@@ -704,4 +704,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectCategory => 'اختر التصنيف';
+
+  @override
+  String get netSavings => 'صافي التوفير';
+
+  @override
+  String get expensesByCategory => 'المصروفات حسب الفئة';
+
+  @override
+  String get incomeByCategory => 'الإيرادات حسب الفئة';
+
+  @override
+  String get noExpensesInPeriod => 'لا توجد مصروفات في هذه الفترة';
+
+  @override
+  String get noIncomeInPeriod => 'لا توجد إيرادات في هذه الفترة';
+
+  @override
+  String get noDataAvailable => 'لا توجد بيانات';
 }

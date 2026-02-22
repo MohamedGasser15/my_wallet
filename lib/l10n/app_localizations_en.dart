@@ -706,4 +706,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectCategory => 'Select category';
+
+  @override
+  String get netSavings => 'Net Savings';
+
+  @override
+  String get expensesByCategory => 'Expenses by Category';
+
+  @override
+  String get incomeByCategory => 'Income by Category';
+
+  @override
+  String get noExpensesInPeriod => 'No expenses in this period';
+
+  @override
+  String get noIncomeInPeriod => 'No income in this period';
+
+  @override
+  String get noDataAvailable => 'No data available';
 }

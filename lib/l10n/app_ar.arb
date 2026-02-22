@@ -234,5 +234,14 @@
   "recurringTransactionDescription": "كرر هذه المعاملة تلقائياً",
   "recurringInterval": "الفاصل الزمني",
   "endDate": "تاريخ الانتهاء",
-  "selectCategory": "اختر التصنيف"
+  "selectCategory": "اختر التصنيف",
+    "analytics": "التحليلات",
+  "totalIncome": "إجمالي الدخل",
+  "totalExpenses": "إجمالي المصروفات",
+  "netSavings": "صافي التوفير",
+  "expensesByCategory": "المصروفات حسب الفئة",
+  "incomeByCategory": "الإيرادات حسب الفئة",
+  "noExpensesInPeriod": "لا توجد مصروفات في هذه الفترة",
+  "noIncomeInPeriod": "لا توجد إيرادات في هذه الفترة",
+  "noDataAvailable": "لا توجد بيانات"
 }

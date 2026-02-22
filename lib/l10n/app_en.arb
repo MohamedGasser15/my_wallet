@@ -234,5 +234,14 @@
   "recurringTransactionDescription": "Repeat this transaction automatically",
   "recurringInterval": "Interval",
   "endDate": "End date",
-  "selectCategory": "Select category"
+  "selectCategory": "Select category",
+    "analytics": "Analytics",
+  "totalIncome": "Total Income",
+  "totalExpenses": "Total Expenses",
+  "netSavings": "Net Savings",
+  "expensesByCategory": "Expenses by Category",
+  "incomeByCategory": "Income by Category",
+  "noExpensesInPeriod": "No expenses in this period",
+  "noIncomeInPeriod": "No income in this period",
+  "noDataAvailable": "No data available"
 }
