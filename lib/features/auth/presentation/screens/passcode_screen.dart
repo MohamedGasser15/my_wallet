@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/services/message_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -257,15 +258,17 @@ class _PasscodeScreenState extends State<PasscodeScreen> with TickerProviderStat
                     setState(() => _isLoading = true);
                     
                     try {
-                       await _authRepository.sendVerification(
-          email: widget.email,
-          isLogin: widget.isLogin,
-          deviceName: widget.deviceName,
-          ipAddress: widget.ipAddress,
-        );
-        _showSuccessSnackBar('New code sent to ${widget.email}');
+                      await _authRepository.sendVerification(
+                        email: widget.email,
+                        isLogin: widget.isLogin,
+                        deviceName: widget.deviceName,
+                        ipAddress: widget.ipAddress,
+                      );
+                      // استخدام MessageService بدلاً من _showSuccessSnackBar
+                      MessageService.showSuccess('New code sent to ${widget.email}');
                     } catch (e) {
-                      _showErrorSnackBar('Failed to send code');
+                      // استخدام MessageService بدلاً من _showErrorSnackBar
+                      MessageService.showError('Failed to send code');
                     } finally {
                       setState(() => _isLoading = false);
                     }
@@ -285,7 +288,6 @@ class _PasscodeScreenState extends State<PasscodeScreen> with TickerProviderStat
       ),
     );
   }
-  
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

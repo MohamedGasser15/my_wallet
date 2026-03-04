@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:my_wallet/core/services/message_service.dart'; // إضافة
+import 'package:my_wallet/core/enums/message_type.dart'; // إضافة
 
 class RegisterScreen extends StatefulWidget {
   final String email;
@@ -26,7 +28,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final AuthRepository _authRepository = AuthRepository();
   
   bool _isLoading = false;
-  String? _errorMessage;
   
   void _onBackPressed() {
     Navigator.pushAndRemoveUntil(
@@ -37,18 +38,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
   
   Future<void> _onComplete() async {
+    // التحقق من ملء جميع الحقول
     if (_fullNameController.text.isEmpty ||
         _userNameController.text.isEmpty ||
         _phoneNumberController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Please fill all fields';
-      });
+      MessageService.showError('Please fill all fields');
       return;
     }
     
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
     
     try {
@@ -62,17 +61,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       
       if (result['success'] == true) {
-        // التسجيل ناجح، الانتقال للصفحة الرئيسية
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        setState(() {
-          _errorMessage = result['message'] ?? 'Registration failed';
+        // عرض رسالة نجاح ثم الانتقال للصفحة الرئيسية
+        MessageService.showSuccess('Registration completed successfully!');
+        // تأخير بسيط للسماح برؤية الرسالة
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
         });
+      } else {
+        MessageService.showError(result['message'] ?? 'Registration failed');
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed: ${e.toString()}';
-      });
+      MessageService.showError('Failed: ${e.toString()}');
     } finally {
       setState(() {
         _isLoading = false;
@@ -134,18 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             
             const SizedBox(height: 40),
             
-            // Error Message
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
+            // تم إزالة قسم عرض _errorMessage
             
             // Full Name
             TextField(

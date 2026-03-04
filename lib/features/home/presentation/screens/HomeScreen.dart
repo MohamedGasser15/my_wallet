@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
-import 'package:my_wallet/core/utils/shared_prefs.dart';
+import 'package:my_wallet/core/services/message_service.dart';
 import 'package:my_wallet/features/home/presentation/screens/TransactionsPage.dart';
 import 'package:my_wallet/features/wallet/data/models/category_model.dart';
 import 'package:my_wallet/features/wallet/data/presentation/screens/analytics_screen.dart';
@@ -15,7 +15,7 @@ import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/features/settings/presentation/screens/settings_screen.dart';
 import 'package:my_wallet/features/wallet/data/repositories/wallet_repository.dart';
 import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
-import 'dart:ui' as ui; // needed for ImageFilter
+import 'dart:ui' as ui;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,25 +27,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
-body: PageView(
-  controller: _pageController,
-  onPageChanged: (index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  },
-  children: [
-    HomeTab(pageController: _pageController), // بدون const
-    const AnalyticsScreen(),
-    const TransactionsTab(),
-    const BudgetPage(),
-  ],
-),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: [
+          HomeTab(pageController: _pageController),
+          const AnalyticsScreen(),
+          const TransactionsTab(),
+          const BudgetPage(),
+        ],
+      ),
       bottomNavigationBar: Container(
         height: 70,
         decoration: BoxDecoration(
@@ -60,19 +61,24 @@ body: PageView(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(0, Icons.home_outlined, Icons.home_filled, isDarkMode),
-            _buildNavItem(1, Icons.pie_chart_outline, Icons.pie_chart, isDarkMode),
-            _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long, isDarkMode),
-            _buildNavItem(3, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet, isDarkMode),
+            _buildNavItem(
+                0, Icons.home_outlined, Icons.home_filled, isDarkMode),
+            _buildNavItem(
+                1, Icons.pie_chart_outline, Icons.pie_chart, isDarkMode),
+            _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long,
+                isDarkMode),
+            _buildNavItem(3, Icons.account_balance_wallet_outlined,
+                Icons.account_balance_wallet, isDarkMode),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, bool isDarkMode) {
+  Widget _buildNavItem(
+      int index, IconData outlineIcon, IconData filledIcon, bool isDarkMode) {
     final isSelected = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         _pageController.animateToPage(
@@ -85,9 +91,9 @@ body: PageView(
         width: 70,
         height: 70,
         decoration: BoxDecoration(
-          color: isSelected 
-            ? (isDarkMode ? Colors.grey[900] : Colors.grey[100])
-            : Colors.transparent,
+          color: isSelected
+              ? (isDarkMode ? Colors.grey[900] : Colors.grey[100])
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -96,9 +102,9 @@ body: PageView(
             Icon(
               isSelected ? filledIcon : outlineIcon,
               size: 24,
-              color: isSelected 
-                ? (isDarkMode ? Colors.white : Colors.black)
-                : (isDarkMode ? Colors.grey[600] : Colors.grey[400]),
+              color: isSelected
+                  ? (isDarkMode ? Colors.white : Colors.black)
+                  : (isDarkMode ? Colors.grey[600] : Colors.grey[400]),
             ),
             if (isSelected)
               Container(
@@ -112,7 +118,7 @@ body: PageView(
               ),
           ],
         ),
-      ) 
+      ),
     );
   }
 }
@@ -132,37 +138,38 @@ class _HomeTabState extends State<HomeTab> {
   String? _errorMessage;
   TransactionType _selectedFilter = TransactionType.all;
 
-
   List<Category> _categories = [];
   bool _isLoadingCategories = false;
-@override
-void initState() {
-  super.initState();
-  _loadHomeData();
-  _loadCategories(); // إضافة
-}
 
-Future<void> _loadCategories() async {
-  setState(() => _isLoadingCategories = true);
-  try {
-    final repo = CategoryRepository();
-    _categories = await repo.getAllCategories();
-  } catch (e) {
-    debugPrint('Error loading categories: $e');
-  } finally {
-    setState(() => _isLoadingCategories = false);
+  @override
+  void initState() {
+    super.initState();
+    _loadHomeData();
+    _loadCategories();
   }
-}
 
-Future<List<WalletTransaction>> _loadAllTransactions() async {
-  try {
-    final response = await _walletRepository.getTransactions(pageSize: 100);
-    return response.transactions;
-  } catch (e) {
-    _showErrorSnackbar('Failed to load transactions: $e');
-    return [];
+  Future<void> _loadCategories() async {
+    setState(() => _isLoadingCategories = true);
+    try {
+      final repo = CategoryRepository();
+      _categories = await repo.getAllCategories();
+    } catch (e) {
+      debugPrint('Error loading categories: $e');
+      MessageService.showError('Failed to load categories: $e');
+    } finally {
+      setState(() => _isLoadingCategories = false);
+    }
   }
-}
+
+  Future<List<WalletTransaction>> _loadAllTransactions() async {
+    try {
+      final response = await _walletRepository.getTransactions(pageSize: 100);
+      return response.transactions;
+    } catch (e) {
+      MessageService.showError('Failed to load transactions: $e');
+      return [];
+    }
+  }
 
   Future<void> _loadHomeData() async {
     setState(() {
@@ -171,7 +178,6 @@ Future<List<WalletTransaction>> _loadAllTransactions() async {
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
       final data = await _walletRepository.getHomeData();
       setState(() {
         _homeData = data;
@@ -192,284 +198,282 @@ Future<List<WalletTransaction>> _loadAllTransactions() async {
   }
 
   List<TransactionFilter> get _filters => [
-    TransactionFilter(type: TransactionType.all, label: context.l10n.all),
-    TransactionFilter(type: TransactionType.income, label: context.l10n.income),
-    TransactionFilter(type: TransactionType.expense, label: context.l10n.expense),
-  ];
+        TransactionFilter(
+            type: TransactionType.all, label: context.l10n.all),
+        TransactionFilter(
+            type: TransactionType.income, label: context.l10n.income),
+        TransactionFilter(
+            type: TransactionType.expense, label: context.l10n.expense),
+      ];
 
   List<WalletTransaction> get _filteredTransactions {
-    if (_selectedFilter == TransactionType.all) return _homeData?.recentTransactions ?? [];
-    
+    if (_selectedFilter == TransactionType.all)
+      return _homeData?.recentTransactions ?? [];
+
     return _homeData?.recentTransactions
-        .where((t) => _selectedFilter == TransactionType.income 
-            ? t.isDeposit 
-            : t.isWithdrawal)
-        .toList() ?? [];
+            .where((t) => _selectedFilter == TransactionType.income
+                ? t.isDeposit
+                : t.isWithdrawal)
+            .toList() ??
+        [];
   }
 
-void _showAddTransactionDialog(TransactionType type) {
-  final isIncome = type == TransactionType.income;
-  
-  // Controllers
-  final titleController = TextEditingController();
-  final amountController = TextEditingController();
-  final descriptionController = TextEditingController();
-  
-  // Selected values
-int? selectedCategoryId = _categories.isNotEmpty ? _categories.first.id : null;
-  DateTime selectedDate = DateTime.now();
-  TimeOfDay selectedTime = TimeOfDay.now();
-  
-  // Recurring options
-  bool isRecurring = false;
-  String? recurringInterval;
-  DateTime? recurringEndDate;
-  
-  // UI state
-  bool _isSubmitting = false;
-  double? _previewAmount;
-  Future<void> _pickDate() async {
-  final date = await showDatePicker(
-    context: context,
-    initialDate: selectedDate,
-    firstDate: DateTime(2000),
-    lastDate: DateTime.now().add(const Duration(days: 365)),
-  );
-  if (date != null) {
-    setState(() {
-      selectedDate = DateTime(
-        date.year, date.month, date.day,
-        selectedTime.hour, selectedTime.minute,
-      );
-    });
-  }
-}Future<void> _pickTime() async {
-  final time = await showTimePicker(
-    context: context,
-    initialTime: selectedTime,
-  );
-  if (time != null) {
-    setState(() {
-      selectedTime = time;
-      selectedDate = DateTime(
-        selectedDate.year, selectedDate.month, selectedDate.day,
-        time.hour, time.minute,
-      );
-    });
-  }
-}
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-          
-          // دالة مساعدة لفتح منتقي التاريخ والوقت
-          Future<void> _pickDateTime() async {
-            final date = await showDatePicker(
-              context: context,
-              initialDate: selectedDate,
-              firstDate: DateTime(2000),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-            );
-            if (date != null) {
-              final time = await showTimePicker(
-                context: context,
-                initialTime: selectedTime,
-              );
-              if (time != null) {
-                setState(() {
-                  selectedDate = DateTime(
-                    date.year, date.month, date.day,
-                    time.hour, time.minute,
-                  );
-                  selectedTime = time;
-                });
-              }
-            }
-          }
+  void _showAddTransactionDialog(TransactionType type) {
+    final isIncome = type == TransactionType.income;
 
-          return Container(
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.black : Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
+    final titleController = TextEditingController();
+    final amountController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    int? selectedCategoryId = _categories.isNotEmpty ? _categories.first.id : null;
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
+
+    bool isRecurring = false;
+    String? recurringInterval;
+    DateTime? recurringEndDate;
+
+    bool _isSubmitting = false;
+    double? _previewAmount;
+
+    Future<void> _pickDate() async {
+      final date = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+      );
+      if (date != null) {
+        setState(() {
+          selectedDate = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+        });
+      }
+    }
+
+    Future<void> _pickTime() async {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: selectedTime,
+      );
+      if (time != null) {
+        setState(() {
+          selectedTime = time;
+          selectedDate = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            time.hour,
+            time.minute,
+          );
+        });
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.black : Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Handle
-                    Container(
-                      height: 4,
-                      width: 40,
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    
-                    // Header with icon and title
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: isIncome
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.red.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                              color: isIncome ? Colors.green[800] : Colors.red[800],
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              isIncome ? context.l10n.addDeposit : context.l10n.addWithdrawal,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Amount preview (live)
-                    if (_previewAmount != null && _previewAmount! > 0)
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 24),
-                        padding: const EdgeInsets.all(16),
+                        height: 4,
+                        width: 40,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: (isIncome ? Colors.green : Colors.red).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isIncome ? Colors.green[800]! : Colors.red[800]!,
-                            width: 1,
-                          ),
+                          color:
+                              isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              context.l10n.amount,
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isIncome
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.red.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isIncome
+                                    ? Icons.arrow_downward
+                                    : Icons.arrow_upward,
+                                color: isIncome
+                                    ? Colors.green[800]
+                                    : Colors.red[800],
+                                size: 24,
                               ),
                             ),
-                            Text(
-                              '${isIncome ? '+' : '-'}\$${_previewAmount!.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: isIncome ? Colors.green[800] : Colors.red[800],
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                isIncome
+                                    ? context.l10n.addDeposit
+                                    : context.l10n.addWithdrawal,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Title Field
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: TextFormField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.title,
-                          labelStyle: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      const SizedBox(height: 16),
+                      if (_previewAmount != null && _previewAmount! > 0)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: (isIncome ? Colors.green : Colors.red)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isIncome
+                                  ? Colors.green[800]!
+                                  : Colors.red[800]!,
+                              width: 1,
+                            ),
                           ),
-                          prefixIcon: Icon(
-                            Icons.title,
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.l10n.amount,
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                '${isIncome ? '+' : '-'}\$${_previewAmount!.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: isIncome
+                                      ? Colors.green[800]
+                                      : Colors.red[800],
+                                ),
+                              ),
+                            ],
                           ),
-                          filled: true,
-                          fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 16,
+                        ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: TextFormField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.title,
+                            labelStyle: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            prefixIcon: Icon(
+                              Icons.title,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            filled: true,
+                            fillColor:
+                                isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Amount Field
-                  // Amount Field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: TextFormField(
-                      controller: amountController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // يسمح فقط بالأرقام ونقطة عشرية واحدة
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _previewAmount = double.tryParse(value);
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: context.l10n.amount,
-                        labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        prefixIcon: Icon(
-                          Icons.attach_money,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        filled: true,
-                        fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16,
-                          horizontal: 16,
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: TextFormField(
+                          controller: amountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*$')),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _previewAmount = double.tryParse(value);
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: context.l10n.amount,
+                            labelStyle: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            prefixIcon: Icon(
+                              Icons.attach_money,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            filled: true,
+                            fillColor:
+                                isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                    const SizedBox(height: 16),
-                    
-                    // Quick amount suggestions
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        children: (isIncome 
-                            ? [50, 100, 500, 1000]
-                            : [10, 20, 50, 100, 200])
-                            .map((value) => Padding(
+                      const SizedBox(height: 16),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          children: (isIncome ? [50, 100, 500, 1000] : [
+                            10, 20, 50, 100, 200
+                          ]).map((value) {
+                            return Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: FilterChip(
                                 label: Text('\$$value'),
@@ -479,434 +483,504 @@ int? selectedCategoryId = _categories.isNotEmpty ? _categories.first.id : null;
                                     _previewAmount = value.toDouble();
                                   });
                                 },
-                                backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                                backgroundColor:
+                                    isDarkMode ? Colors.grey[800] : Colors.grey[100],
                                 selected: false,
                               ),
-                            ))
-                            .toList(),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                   // Category Dropdown
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: _isLoadingCategories
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  : DropdownButtonFormField<int>(
-                      value: selectedCategoryId,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.category,
-                        labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            );
+                          }).toList(),
                         ),
-                        prefixIcon: Icon(
-                          Icons.category,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.transparent,
                       ),
-                      items: _categories.map((category) {
-                        return DropdownMenuItem<int>(
-                          value: category.id,
-                          child: Text(
-                            // اختيار اللغة المناسبة
-                            Localizations.localeOf(context).languageCode == 'ar'
-                                ? category.nameAr
-                                : category.nameEn,
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.white : Colors.black,
-                            ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color:
+                                isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCategoryId = value;
-                        });
-                      },
-                      hint: Text(
-                        context.l10n.selectCategory,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
+                          child: _isLoadingCategories
+                              ? const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : DropdownButtonFormField<int>(
+                                  value: selectedCategoryId,
+                                  decoration: InputDecoration(
+                                    labelText: context.l10n.category,
+                                    labelStyle: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.category,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.transparent,
+                                  ),
+                                  items: _categories.map((category) {
+                                    return DropdownMenuItem<int>(
+                                      value: category.id,
+                                      child: Text(
+                                        Localizations.localeOf(context)
+                                                    .languageCode ==
+                                                'ar'
+                                            ? category.nameAr
+                                            : category.nameEn,
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedCategoryId = value;
+                                    });
+                                  },
+                                  hint: Text(
+                                    context.l10n.selectCategory,
+                                    style: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.grey[500]
+                                          : Colors.grey[400],
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
-                    ),
-            ),
-          ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Date & Time Picker
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 24),
-  child: Row(
-    children: [
-      // حقل التاريخ
-      Expanded(
-        flex: 3,
-        child: InkWell(
-          onTap: _pickDate,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, size: 20, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
-                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-                  ),
-                ),
-                Icon(Icons.arrow_drop_down, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-              ],
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(width: 8),
-      // حقل الوقت
-      Expanded(
-        flex: 2,
-        child: InkWell(
-          onTap: _pickTime,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, size: 20, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-                  ),
-                ),
-                Icon(Icons.arrow_drop_down, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-),
-                    const SizedBox(height: 16),
-                    
-                    // Recurring Switch and options
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        children: [
-                          SwitchListTile(
-                            value: isRecurring,
-                            onChanged: (value) {
-                              setState(() {
-                                isRecurring = value;
-                                if (!value) {
-                                  recurringInterval = null;
-                                  recurringEndDate = null;
-                                }
-                              });
-                            },
-                            title: Text(
-                              context.l10n.recurringTransaction,
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              context.l10n.recurringTransactionDescription,
-                              style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                            secondary: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.repeat,
-                                color: isDarkMode ? Colors.white : Colors.black,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          if (isRecurring) ...[
-                            const SizedBox(height: 12),
-                            // Interval selector
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButtonFormField<String>(
-                                    value: recurringInterval ?? 'monthly',
-                                    items: const [
-                                      DropdownMenuItem(value: 'daily', child: Text('Daily')),
-                                      DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-                                      DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
-                                      DropdownMenuItem(value: 'yearly', child: Text('Yearly')),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: InkWell(
+                                onTap: _pickDate,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? Colors.grey[900]
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.calendar_today,
+                                          size: 20,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                                          style: TextStyle(
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.black),
+                                        ),
+                                      ),
+                                      Icon(Icons.arrow_drop_down,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
                                     ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        recurringInterval = value;
-                                      });
-                                    },
-                                    decoration: InputDecoration(
-                                      labelText: context.l10n.recurringInterval,
-                                      filled: true,
-                                      fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () async {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: recurringEndDate ?? selectedDate.add(const Duration(days: 365)),
-                                        firstDate: selectedDate,
-                                        lastDate: DateTime(2100),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          recurringEndDate = date;
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                                      decoration: BoxDecoration(
-                                        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                                        borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: _pickTime,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? Colors.grey[900]
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.access_time,
+                                          size: 20,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                                          style: TextStyle(
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.black),
+                                        ),
                                       ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_today,
-                                            size: 16,
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              recurringEndDate == null
-                                                  ? context.l10n.endDate
-                                                  : '${recurringEndDate!.day}/${recurringEndDate!.month}/${recurringEndDate!.year}',
-                                              style: TextStyle(
-                                                color: recurringEndDate == null
-                                                    ? (isDarkMode ? Colors.grey[500] : Colors.grey[600])
-                                                    : (isDarkMode ? Colors.white : Colors.black),
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                      Icon(Icons.arrow_drop_down,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600]),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           ],
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Description Field
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: TextFormField(
-                        controller: descriptionController,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.descriptionOptional,
-                          labelStyle: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                          prefixIcon: Icon(
-                            Icons.description,
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                          ),
-                          filled: true,
-                          fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 16,
-                          ),
                         ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Buttons
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _isSubmitting
-                                  ? null
-                                  : () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                context.l10n.cancel,
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            SwitchListTile(
+                              value: isRecurring,
+                              onChanged: (value) {
+                                setState(() {
+                                  isRecurring = value;
+                                  if (!value) {
+                                    recurringInterval = null;
+                                    recurringEndDate = null;
+                                  }
+                                });
+                              },
+                              title: Text(
+                                context.l10n.recurringTransaction,
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white : Colors.black,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isSubmitting
-                                  ? null
-                                  : () async {
-                                      // Validation
-                                      if (titleController.text.isEmpty) {
-                                        _showErrorSnackbar(context.l10n.enterTitle);
-                                        return;
-                                      }
-                                      if (amountController.text.isEmpty) {
-                                        _showErrorSnackbar(context.l10n.enterAmount);
-                                        return;
-                                      }
-                                      final amount = double.tryParse(amountController.text);
-                                      if (amount == null || amount <= 0) {
-                                        _showErrorSnackbar(context.l10n.enterValidAmount);
-                                        return;
-                                      }
-                                      
-                                      setState(() {
-                                        _isSubmitting = true;
-                                      });
-                                      
-                                      try {
-                                        await _walletRepository.addTransaction(
-                                        title: titleController.text,
-                                        description: descriptionController.text,
-                                        amount: amount,
-                                        type: isIncome ? 'Deposit' : 'Withdrawal',
-                                        categoryId: selectedCategoryId!, // إرسال categoryId
-                                        transactionDate: selectedDate,
-                                        isRecurring: isRecurring,
-                                        recurringInterval: recurringInterval,
-                                        recurringEndDate: recurringEndDate,
-                                      );
-                                        
-                                        Navigator.pop(context);
-                                        await _loadHomeData();
-                                        
-                                        _showSuccessMessage(
-                                          isIncome
-                                              ? context.l10n.depositAddedSuccess
-                                              : context.l10n.withdrawalAddedSuccess
-                                        );
-                                      } catch (e) {
-                                        _showErrorSnackbar(context.l10n.failedToAddTransaction(e.toString()));
-                                      } finally {
-                                        setState(() {
-                                          _isSubmitting = false;
-                                        });
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isIncome ? Colors.green[800] : Colors.red[800],
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              subtitle: Text(
+                                context.l10n.recurringTransactionDescription,
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                  fontSize: 12,
                                 ),
                               ),
-                              child: _isSubmitting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Text(
-                                      context.l10n.add,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
+                              secondary: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[200],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.repeat,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.black,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            if (isRecurring) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      value: recurringInterval ?? 'monthly',
+                                      items: const [
+                                        DropdownMenuItem(
+                                            value: 'daily', child: Text('Daily')),
+                                        DropdownMenuItem(
+                                            value: 'weekly', child: Text('Weekly')),
+                                        DropdownMenuItem(
+                                            value: 'monthly',
+                                            child: Text('Monthly')),
+                                        DropdownMenuItem(
+                                            value: 'yearly',
+                                            child: Text('Yearly')),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          recurringInterval = value;
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        labelText: context.l10n.recurringInterval,
+                                        filled: true,
+                                        fillColor: isDarkMode
+                                            ? Colors.grey[900]
+                                            : Colors.grey[50],
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
                                       ),
                                     ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () async {
+                                        final date = await showDatePicker(
+                                          context: context,
+                                          initialDate: recurringEndDate ??
+                                              selectedDate
+                                                  .add(const Duration(days: 365)),
+                                          firstDate: selectedDate,
+                                          lastDate: DateTime(2100),
+                                        );
+                                        if (date != null) {
+                                          setState(() {
+                                            recurringEndDate = date;
+                                          });
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16, horizontal: 12),
+                                        decoration: BoxDecoration(
+                                          color: isDarkMode
+                                              ? Colors.grey[900]
+                                              : Colors.grey[50],
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today,
+                                              size: 16,
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                recurringEndDate == null
+                                                    ? context.l10n.endDate
+                                                    : '${recurringEndDate!.day}/${recurringEndDate!.month}/${recurringEndDate!.year}',
+                                                style: TextStyle(
+                                                  color: recurringEndDate == null
+                                                      ? (isDarkMode
+                                                          ? Colors.grey[500]
+                                                          : Colors.grey[600])
+                                                      : (isDarkMode
+                                                          ? Colors.white
+                                                          : Colors.black),
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: TextFormField(
+                          controller: descriptionController,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.descriptionOptional,
+                            labelStyle: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            prefixIcon: Icon(
+                              Icons.description,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
+                            filled: true,
+                            fillColor:
+                                isDarkMode ? Colors.grey[900] : Colors.grey[50],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 32),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _isSubmitting
+                                    ? null
+                                    : () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                    color: isDarkMode
+                                        ? Colors.grey[700]!
+                                        : Colors.grey[300]!,
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  context.l10n.cancel,
+                                  style: TextStyle(
+                                    color:
+                                        isDarkMode ? Colors.white : Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _isSubmitting
+                                    ? null
+                                    : () async {
+                                        if (titleController.text.isEmpty) {
+                                          MessageService.showError(
+                                              context.l10n.enterTitle);
+                                          return;
+                                        }
+                                        if (amountController.text.isEmpty) {
+                                          MessageService.showError(
+                                              context.l10n.enterAmount);
+                                          return;
+                                        }
+                                        final amount = double.tryParse(
+                                            amountController.text);
+                                        if (amount == null || amount <= 0) {
+                                          MessageService.showError(
+                                              context.l10n.enterValidAmount);
+                                          return;
+                                        }
+
+                                        setState(() {
+                                          _isSubmitting = true;
+                                        });
+
+                                        try {
+                                          await _walletRepository.addTransaction(
+                                            title: titleController.text,
+                                            description:
+                                                descriptionController.text,
+                                            amount: amount,
+                                            type: isIncome
+                                                ? 'Deposit'
+                                                : 'Withdrawal',
+                                            categoryId: selectedCategoryId!,
+                                            transactionDate: selectedDate,
+                                            isRecurring: isRecurring,
+                                            recurringInterval: recurringInterval,
+                                            recurringEndDate: recurringEndDate,
+                                          );
+
+                                          Navigator.pop(context);
+                                          await _loadHomeData();
+
+                                          MessageService.showSuccess(
+                                            isIncome
+                                                ? context.l10n.depositAddedSuccess
+                                                : context.l10n
+                                                    .withdrawalAddedSuccess,
+                                          );
+                                        } catch (e) {
+                                          MessageService.showError(context.l10n
+                                              .failedToAddTransaction(
+                                                  e.toString()));
+                                        } finally {
+                                          setState(() {
+                                            _isSubmitting = false;
+                                          });
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isIncome
+                                      ? Colors.green[800]
+                                      : Colors.red[800],
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: _isSubmitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        context.l10n.add,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showDeleteConfirmationDialog(WalletTransaction transaction) {
     showDialog(
       context: context,
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        
+
         return AlertDialog(
           backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
           title: Text(
@@ -950,123 +1024,92 @@ Padding(
   Future<void> _deleteTransaction(WalletTransaction transaction) async {
     try {
       final success = await _walletRepository.deleteTransaction(transaction.id);
-      
+
       if (success) {
         await _loadHomeData();
-        _showSuccessMessage(context.l10n.transactionDeletedSuccess);
+        MessageService.showSuccess(context.l10n.transactionDeletedSuccess);
       } else {
-        _showErrorSnackbar(context.l10n.failedToDeleteTransaction);
+        MessageService.showError(context.l10n.failedToDeleteTransaction);
       }
     } catch (e) {
-      _showErrorSnackbar(context.l10n.errorDeletingTransaction(e.toString()));
+      MessageService.showError(
+          context.l10n.errorDeletingTransaction(e.toString()));
     }
   }
 
-  void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
+  void _showAllTransactionsModal(List<WalletTransaction> transactions) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.black : Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 4,
+                    width: 40,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'All Transactions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: transactions.isEmpty
+                        ? _buildEmptyState(isDarkMode)
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: transactions.length,
+                            itemBuilder: (context, index) {
+                              final transaction = transactions[index];
+                              return _buildTransactionCard(
+                                  transaction, isDarkMode);
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-void _showAllTransactionsModal(List<WalletTransaction> transactions) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.8,
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.black : Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  height: 4,
-                  width: 40,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'All Transactions',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Transactions list
-                Expanded(
-                  child: transactions.isEmpty
-                      ? _buildEmptyState(isDarkMode)
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: transactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = transactions[index];
-                            return _buildTransactionCard(transaction, isDarkMode);
-                          },
-                        ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-  // Skeleton Widgets (تم تعديلها لتتناسب مع التصميم الجديد)
+  // Skeleton Widgets
   Widget _buildSkeletonAppBar(bool isDarkMode) {
     return Padding(
       padding: const EdgeInsets.only(top: 50, right: 20, left: 20),
@@ -1352,32 +1395,34 @@ void _showAllTransactionsModal(List<WalletTransaction> transactions) {
           _buildSkeletonQuickActions(isDarkMode),
           _buildSkeletonTransactionHeader(isDarkMode),
           _buildSkeletonFilters(isDarkMode),
-          ...List.generate(3, (index) => _buildSkeletonTransactionCard(isDarkMode)),
+          ...List.generate(
+              3, (index) => _buildSkeletonTransactionCard(isDarkMode)),
         ],
       ),
     );
   }
 
-Widget _buildBlurrableNumber(String text, TextStyle style, bool blurred) {
-  return TweenAnimationBuilder<double>(
-    tween: Tween(begin: blurred ? 0 : 8, end: blurred ? 8 : 0),
-    duration: const Duration(milliseconds: 300),
-    builder: (context, sigma, child) {
-      if (sigma == 0) {
-        return Text(text, style: style);
-      }
-      return ImageFiltered(
-        imageFilter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-        child: Text(text, style: style),
-      );
-    },
-  );
-}
+  Widget _buildBlurrableNumber(String text, TextStyle style, bool blurred) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: blurred ? 0 : 8, end: blurred ? 8 : 0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, sigma, child) {
+        if (sigma == 0) {
+          return Text(text, style: style);
+        }
+        return ImageFiltered(
+          imageFilter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+          child: Text(text, style: style),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final hideService = Provider.of<HideBalanceService>(context);
+
     return SafeArea(
       bottom: false,
       child: RefreshIndicator(
@@ -1386,259 +1431,246 @@ Widget _buildBlurrableNumber(String text, TextStyle style, bool blurred) {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              if (_isLoading)
-                _buildSkeletonLoading(isDarkMode),
-
-              if (_errorMessage != null && !_isLoading)
+              if (_homeData == null) ...[
+                if (_isLoading)
+                  _buildSkeletonLoading(isDarkMode)
+                else if (_errorMessage != null)
+                  _buildErrorWidget(isDarkMode)
+                else
+                  const SizedBox.shrink(),
+              ] else ...[
                 Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDarkMode
+                            ? [Colors.grey[900]!, Colors.grey[850]!]
+                            : [Colors.white, Colors.grey[50]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadHomeData,
-                        child: Text(context.l10n.tryAgain),
-                      ),
-                    ],
-                  ),
-                ),
-
-              if (_homeData != null && !_isLoading) ...[
-                // بطاقة الرصيد الجديدة التي تمتد للأعلى وتحتوي على أيقونة البروفايل
-// Balance Card (New Design - منفصلة عن الحافة)
-Padding(
-  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-  child: Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: isDarkMode
-            ? [Colors.grey[900]!, Colors.grey[850]!]
-            : [Colors.white, Colors.grey[50]!],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
-          blurRadius: 15,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // الصف العلوي: (أيقونة المحفظة + اسم التطبيق) + أيقونة العين + صورة البروفايل
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // ===== الجزء المعدل: أيقونة + اسم التطبيق معاً داخل حاوية واحدة =====
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(30), // شكل كبسولة ناعم
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined, // أيقونة المحفظة
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.l10n.appTitle, // "محفظتي" أو "Mahfazati"
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // ===== نهاية التعديل =====
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      hideService.isHidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                      size: 20,
-                    ),
-                    onPressed: hideService.toggle,
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SettingsScreen(
-                          onLocaleChanged: (locale) {},
-                        ),
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                      child: Icon(
-                        Icons.person,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            context.l10n.totalBalance,
-            style: TextStyle(
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildBlurrableNumber(
-                '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
-                TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: 40,
-                  fontWeight: FontWeight.w800,
-                ),
-                hideService.isHidden,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade700,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_downward,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.income,
-                          style: TextStyle(
-                            color: Colors.green.shade800,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    _buildBlurrableNumber(
-                      '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
-                      TextStyle(
-                        color: Colors.green.shade800,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      hideService.isHidden,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade700,
-                            shape: BoxShape.circle,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance_wallet_outlined,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      context.l10n.appTitle,
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      hideService.isHidden
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                      size: 20,
+                                    ),
+                                    onPressed: hideService.toggle,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SettingsScreen(
+                                          onLocaleChanged: (locale) {},
+                                        ),
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200],
+                                      child: Icon(
+                                        Icons.person,
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : Colors.black,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            Icons.arrow_upward,
-                            color: Colors.white,
-                            size: 12,
+                          const SizedBox(height: 16),
+                          Text(
+                            context.l10n.totalBalance,
+                            style: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.l10n.expense,
-                          style: TextStyle(
-                            color: Colors.red.shade800,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildBlurrableNumber(
-                      '\$${_homeData!.balance.totalDeposits.toStringAsFixed(2)}',
-                      TextStyle(
-                        color: Colors.red.shade800,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      hideService.isHidden,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
+                          const SizedBox(height: 8),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+_buildBlurrableNumber(
+  '\$${_formatCurrency(_homeData!.balance.totalBalance)}',
+  TextStyle(
+    color: isDarkMode ? Colors.white : Colors.black,
+    fontSize: 40,
+    fontWeight: FontWeight.w800,
   ),
+  hideService.isHidden,
 ),
-              Container(
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.shade700,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.arrow_downward,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          context.l10n.income,
+                                          style: TextStyle(
+                                            color: Colors.green.shade800,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+_buildBlurrableNumber(
+  '\$${_formatCurrency(_homeData!.balance.totalDeposits)}',
+  TextStyle(
+    color: Colors.green.shade800,
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+  ),
+  hideService.isHidden,
+),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.shade700,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.arrow_upward,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          context.l10n.expense,
+                                          style: TextStyle(
+                                            color: Colors.red.shade800,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+_buildBlurrableNumber(
+  '\$${_formatCurrency(_homeData!.balance.totalWithdrawals)}',
+  TextStyle(
+    color: Colors.red.shade800,
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+  ),
+  hideService.isHidden,
+),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
                   margin: const EdgeInsets.symmetric(vertical: 24),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -1659,8 +1691,6 @@ Padding(
                     ],
                   ),
                 ),
-
-                // Recent Transactions Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -1674,33 +1704,31 @@ Padding(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-if (_homeData != null && _homeData!.totalTransactionCount > 5)
-  TextButton(
-    onPressed: () async {
-      final allTransactions = await _loadAllTransactions();
-      if (!mounted) return;
-      _showAllTransactionsModal(allTransactions);
-    },
-    style: TextButton.styleFrom(
-      padding: EdgeInsets.zero,
-      minimumSize: Size.zero,
-    ),
-    child: Text(
-      context.l10n.seeAll,
-      style: TextStyle(
-        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  )
-else
-  const SizedBox.shrink(),
+                      if (_homeData!.totalTransactionCount > 5)
+                        TextButton(
+                          onPressed: () async {
+                            final allTransactions = await _loadAllTransactions();
+                            if (!mounted) return;
+                            _showAllTransactionsModal(allTransactions);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                          ),
+                          child: Text(
+                            context.l10n.seeAll,
+                            style: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-
-                // Transaction Filters
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   padding: const EdgeInsets.all(4),
@@ -1719,7 +1747,8 @@ else
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: _selectedFilter == filter.type
                                       ? (isDarkMode ? Colors.black : Colors.white)
@@ -1741,7 +1770,9 @@ else
                                   style: TextStyle(
                                     color: _selectedFilter == filter.type
                                         ? (isDarkMode ? Colors.white : Colors.black)
-                                        : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                                        : (isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600]),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1752,8 +1783,6 @@ else
                         .toList(),
                   ),
                 ),
-
-                // Transactions List
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: _filteredTransactions.isEmpty
@@ -1761,16 +1790,44 @@ else
                       : Column(
                           children: _filteredTransactions
                               .take(5)
-                              .map((transaction) => _buildTransactionCard(transaction, isDarkMode))
+                              .map((transaction) => _buildTransactionCard(
+                                  transaction, isDarkMode))
                               .toList(),
                         ),
                 ),
-
                 const SizedBox(height: 80),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(bool isDarkMode) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage!,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadHomeData,
+            child: Text(context.l10n.tryAgain),
+          ),
+        ],
       ),
     );
   }
@@ -1840,109 +1897,109 @@ else
     );
   }
 
-Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
-  final isIncome = transaction.isDeposit;
-  final hideService = Provider.of<HideBalanceService>(context, listen: true);
-  final locale = Localizations.localeOf(context).languageCode;
-  final categoryName = locale == 'ar'
-      ? (transaction.categoryNameAr ?? transaction.categoryNameEn ?? '')
-      : (transaction.categoryNameEn ?? transaction.categoryNameAr ?? '');
+  Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
+    final isIncome = transaction.isDeposit;
+    final hideService = Provider.of<HideBalanceService>(context, listen: true);
+    final locale = Localizations.localeOf(context).languageCode;
+    final categoryName = locale == 'ar'
+        ? (transaction.categoryNameAr ?? transaction.categoryNameEn ?? '')
+        : (transaction.categoryNameEn ?? transaction.categoryNameAr ?? '');
 
-  return GestureDetector(
-    onLongPress: () {
-      _showDeleteConfirmationDialog(transaction);
-    },
-    child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // أيقونة
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isIncome 
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              transaction.icon,
-              color: isIncome ? Colors.green[800] : Colors.red[800],
-              size: 20,
-            ),
+    return GestureDetector(
+      onLongPress: () {
+        _showDeleteConfirmationDialog(transaction);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+            width: 1,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.title,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isIncome
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.red.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                transaction.icon,
+                color: isIncome ? Colors.green[800] : Colors.red[800],
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.title,
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$categoryName • ${_formatDate(transaction.transactionDate)}',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (transaction.description != null &&
+                      transaction.description!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        transaction.description!,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+              _buildBlurrableNumber(
+  _formatCurrency(transaction.amount), // بدون رمز الدولار لأنه مضاف مسبقاً في formattedAmount
+  TextStyle(
+    color: isIncome ? Colors.green[800] : Colors.red[800],
+    fontWeight: FontWeight.w800,
+    fontSize: 16,
+  ),
+  hideService.isHidden,
+),
                 Text(
-                  '$categoryName • ${_formatDate(transaction.transactionDate)}',
+                  _formatDate(transaction.transactionDate),
                   style: TextStyle(
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
-                if (transaction.description != null && transaction.description!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      transaction.description!,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
               ],
             ),
-          ),
-          // عمود المبلغ
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildBlurrableNumber(
-                transaction.formattedAmount,
-                TextStyle(
-                  color: isIncome ? Colors.green[800] : Colors.red[800],
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                ),
-                hideService.isHidden,
-              ),
-              Text(
-                _formatDate(transaction.transactionDate),
-                style: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   Widget _buildEmptyState(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),
@@ -1973,11 +2030,14 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
       ),
     );
   }
-
+String _formatCurrency(double amount) {
+  final formatter = NumberFormat('#,##0', 'en_US'); // بدون منازل عشرية
+  return formatter.format(amount);
+}
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inMinutes < 60) {
       return '${difference.inMinutes}${context.l10n.minutesAgo}';
     } else if (difference.inHours < 24) {
@@ -1989,7 +2049,6 @@ Widget _buildTransactionCard(WalletTransaction transaction, bool isDarkMode) {
     }
   }
 }
-
 
 enum TransactionType { all, income, expense }
 

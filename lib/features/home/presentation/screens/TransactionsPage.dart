@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/services/message_service.dart';
 import 'package:my_wallet/features/wallet/data/models/wallet_models.dart';
 import 'package:my_wallet/features/wallet/data/repositories/wallet_repository.dart';
 import 'package:shimmer/shimmer.dart';
@@ -744,59 +745,49 @@ class _TransactionsTabState extends State<TransactionsTab> with TickerProviderSt
     );
   }
 
-  void _showDeleteDialog(WalletTransaction transaction) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
-        title: Text(
-          'Delete Transaction',
-          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-        ),
-        content: Text(
-          'Are you sure you want to delete "${transaction.title}"?',
-          style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[700]),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[700]),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await _walletRepository.deleteTransaction(transaction.id);
-                _refreshData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Transaction deleted'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to delete: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
+void _showDeleteDialog(WalletTransaction transaction) {
+  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+      title: Text(
+        'Delete Transaction',
+        style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
       ),
-    );
-  }
-
+      content: Text(
+        'Are you sure you want to delete "${transaction.title}"?',
+        style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[700]),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: isDarkMode ? Colors.grey[300] : Colors.grey[700]),
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(context); // إغلاق الـ dialog
+            try {
+              await _walletRepository.deleteTransaction(transaction.id);
+              await _refreshData(); // تحديث القائمة
+              // ✅ استخدام MessageService بدلاً من SnackBar
+              MessageService.showSuccess('Transaction deleted successfully');
+            } catch (e) {
+              MessageService.showError('Failed to delete: $e');
+            }
+          },
+          child: const Text(
+            'Delete',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      ],
+    ),
+  );
+}
   String _formatDate(DateTime date, BuildContext context, {required bool short}) {
     if (short) {
       return '${date.day}/${date.month}';

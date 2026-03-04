@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
+import 'package:my_wallet/core/services/message_service.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
 
@@ -205,7 +206,7 @@ class _VerificationScreenState extends State<VerificationScreen> with TickerProv
     _shakeController.forward(from: 0.0);
   }
 
-  Future<void> _resendCode() async {
+ Future<void> _resendCode() async {
     if (_countdown > 0) return;
 
     setState(() {
@@ -214,17 +215,19 @@ class _VerificationScreenState extends State<VerificationScreen> with TickerProv
     });
 
     try {
-    await _authRepository.resendCode(
-  email: widget.email,
-  isLogin: widget.isLogin,
-  deviceName: widget.deviceName,   // أضف ده
-  ipAddress: widget.ipAddress,     // أضف ده
-);
+      await _authRepository.resendCode(
+        email: widget.email,
+        isLogin: widget.isLogin,
+        deviceName: widget.deviceName,
+        ipAddress: widget.ipAddress,
+      );
       _resetTimer();
       _clearCode();
-      _showSuccessSnackBar('Verification code resent to ${widget.email}');
+      // استخدام MessageService بدلاً من _showSuccessSnackBar
+      MessageService.showSuccess('Verification code resent to ${widget.email}');
     } catch (e) {
-      _showErrorSnackBar('Failed to resend code. Please try again.');
+      // استخدام MessageService بدلاً من _showErrorSnackBar
+      MessageService.showError('Failed to resend code. Please try again.');
     } finally {
       setState(() {
         _isLoading = false;

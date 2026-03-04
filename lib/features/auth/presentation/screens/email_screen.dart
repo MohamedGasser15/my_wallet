@@ -5,6 +5,8 @@ import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/services/device_info_service.dart';
 import 'package:my_wallet/features/auth/data/repositories/auth_repository.dart';
 import 'package:my_wallet/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:my_wallet/core/services/message_service.dart'; // إضافة import
+import 'package:my_wallet/core/enums/message_type.dart'; // إضافة import
 
 class EmailScreen extends StatefulWidget {
   const EmailScreen({super.key});
@@ -23,7 +25,7 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
   bool _emailExists = false;
   String? _deviceName;
   String? _ipAddress;
-  // Wave loading animation variables
+  
   late AnimationController _waveController;
   late Animation<double> _waveAnimation;
   final List<double> _dotScales = [1.0, 1.0, 1.0];
@@ -33,8 +35,8 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _emailController.addListener(_validateEmail);
-      _loadDeviceInfo();
-    // Initialize wave animation controller
+    _loadDeviceInfo();
+    
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -47,16 +49,17 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
       ),
     );
   }
+  
   Future<void> _loadDeviceInfo() async {
-  final deviceName = await DeviceInfoService().getDeviceName();
-  final ip = await DeviceInfoService().getPublicIp(); // اختياري
-  if (mounted) {
-    setState(() {
-      _deviceName = deviceName;
-      _ipAddress = ip;
-    });
+    final deviceName = await DeviceInfoService().getDeviceName();
+    final ip = await DeviceInfoService().getPublicIp();
+    if (mounted) {
+      setState(() {
+        _deviceName = deviceName;
+        _ipAddress = ip;
+      });
+    }
   }
-}
   void _startWaveAnimation() {
     _waveController.repeat(reverse: true);
     
@@ -67,17 +70,13 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
       }
       
       setState(() {
-        // Create wave effect for 3 dots
         final time = DateTime.now().millisecondsSinceEpoch / 500;
         
         for (int i = 0; i < 3; i++) {
           double phase = i * 0.8;
           double waveValue = sin(time - phase);
           
-          // Normalize to [0.5, 1.0] range for opacity
           _dotOpacities[i] = 0.5 + ((waveValue + 1) / 2) * 0.5;
-          
-          // Normalize to [0.8, 1.2] range for scale
           _dotScales[i] = 0.8 + ((waveValue + 1) / 2) * 0.4;
         }
       });
@@ -87,7 +86,6 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
   void _stopWaveAnimation() {
     _waveController.stop();
     setState(() {
-      // Reset dots to normal state
       for (int i = 0; i < 3; i++) {
         _dotScales[i] = 1.0;
         _dotOpacities[i] = 0.5;
@@ -111,7 +109,6 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
       _isLoading = true;
     });
     
-    // Start wave animation
     _startWaveAnimation();
     
     try {
@@ -122,19 +119,12 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
         _emailExists = exists;
       });
       
-      // إرسال كود التحقق
       await _sendVerificationCode();
       
-      // إظهار رسالة نجاح
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Verification code sent to $email'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      // استخدام MessageService بدلاً من SnackBar
+      MessageService.showSuccess('Verification code sent to $email');
     } catch (e) {
-      _showErrorSnackbar('Error: ${e.toString()}');
+      MessageService.showError('Error: ${e.toString()}');
     } finally {
       setState(() {
         _isLoading = false;
@@ -143,47 +133,37 @@ class _EmailScreenState extends State<EmailScreen> with SingleTickerProviderStat
     }
   }
   
-Future<void> _sendVerificationCode() async {
-  final email = _emailController.text.trim();
-  final isLogin = _emailExists;
-  
-  // تأكد من أن deviceName موجود (لو لسه مجاش نستخدم قيمة افتراضية)
-  final deviceName = _deviceName ?? await DeviceInfoService().getDeviceName();
-
-  try {
-    await _authRepository.sendVerification(
-      email: email,
-      isLogin: isLogin,
-      deviceName: deviceName,
-      ipAddress: _ipAddress,
-    );
+  Future<void> _sendVerificationCode() async {
+    final email = _emailController.text.trim();
+    final isLogin = _emailExists;
     
-    // الانتقال لشاشة التحقق مع تمرير البيانات
-    Navigator.pushNamed(
-      context,
-      '/verification',
-      arguments: {
-        'email': email,
-        'isLogin': isLogin,
-        'deviceName': deviceName,
-        'ipAddress': _ipAddress,
-      },
-    );
-  } catch (e) {
-    _showErrorSnackbar('Failed to send verification code');
-  }
-}
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
+    final deviceName = _deviceName ?? await DeviceInfoService().getDeviceName();
+
+    try {
+      await _authRepository.sendVerification(
+        email: email,
+        isLogin: isLogin,
+        deviceName: deviceName,
+        ipAddress: _ipAddress,
+      );
+      
+      Navigator.pushNamed(
+        context,
+        '/verification',
+        arguments: {
+          'email': email,
+          'isLogin': isLogin,
+          'deviceName': deviceName,
+          'ipAddress': _ipAddress,
+        },
+      );
+    } catch (e) {
+      // استخدام MessageService هنا أيضاً
+      MessageService.showError('Failed to send verification code');
+    }
   }
   
   void _onBackPressed() {
-    // الرجوع لشاشة Onboarding
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => OnboardingScreen(onLocaleChanged: (locale) {})),
@@ -224,7 +204,6 @@ Future<void> _sendVerificationCode() async {
       ),
       body: Column(
         children: [
-          // Main Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -233,7 +212,6 @@ Future<void> _sendVerificationCode() async {
                 children: [
                   const SizedBox(height: 16),
                   
-                  // Title
                   Text(
                     context.l10n.whatIsYourEmail,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -243,7 +221,6 @@ Future<void> _sendVerificationCode() async {
                   
                   const SizedBox(height: 12),
                   
-                  // Subtitle
                   Text(
                     context.l10n.enterYourEmailDescription,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -254,7 +231,6 @@ Future<void> _sendVerificationCode() async {
                   
                   const SizedBox(height: 40),
                   
-                  // Email Input Field
                   TextField(
                     controller: _emailController,
                     focusNode: _emailFocusNode,
@@ -319,14 +295,13 @@ Future<void> _sendVerificationCode() async {
                   
                   const SizedBox(height: 32),
                   
-                  // Lost Access Link باللون الأزرق
                   Center(
                     child: GestureDetector(
                       onTap: _onLostAccess,
                       child: Text(
                         context.l10n.lostAccessToEmail,
                         style: TextStyle(
-                          color: Colors.blue, // اللون الأزرق المطلوب
+                          color: Colors.blue,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -334,14 +309,12 @@ Future<void> _sendVerificationCode() async {
                     ),
                   ),
                   
-                  // Spacer
                   const SizedBox(height: 80),
                 ],
               ),
             ),
           ),
           
-          // Continue Button with Wave Loading
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             width: double.infinity,

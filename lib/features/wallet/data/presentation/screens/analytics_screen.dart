@@ -27,9 +27,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   ChartType _expensesChartType = ChartType.line;
   ChartType _incomeChartType = ChartType.line;
 
-  // للتجميل
+  // للتجميل - سنستخدم دالة التنسيق الجديدة بدلاً من NumberFormat.currency
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
-  final NumberFormat _currencyFormat = NumberFormat.currency(symbol: '\$');
+  // NumberFormat _currencyFormat = NumberFormat.currency(symbol: '\$'); // لن نستخدمه بعد الآن
 
   @override
   void initState() {
@@ -64,6 +64,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  // دالة تنسيق العملة بدون منازل عشرية وتضيف فاصلة للألاف (مثل اللي في HomeScreen)
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat('#,##0', 'en_US'); // بدون منازل عشرية
+    return formatter.format(amount);
   }
 
   @override
@@ -107,7 +113,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   title: context.l10n.totalIncome,
-                                  value: _currencyFormat.format(_summaryData!['totalIncome']),
+                                  value: '\$${_formatCurrency(_summaryData!['totalIncome'])}', // تعديل هنا
                                   icon: Icons.trending_up,
                                   color: Colors.green,
                                   isDarkMode: isDarkMode,
@@ -117,7 +123,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   title: context.l10n.totalExpenses,
-                                  value: _currencyFormat.format(_summaryData!['totalExpenses']),
+                                  value: '\$${_formatCurrency(_summaryData!['totalExpenses'])}', // تعديل هنا
                                   icon: Icons.trending_down,
                                   color: Colors.red,
                                   isDarkMode: isDarkMode,
@@ -337,7 +343,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ? cat.categoryNameAr
                       : cat.categoryNameEn;
                   return BarTooltipItem(
-                    '$name\n${_currencyFormat.format(rod.toY)}',
+                    '$name\n\$${_formatCurrency(rod.toY)}', // تعديل هنا
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   );
                 },
@@ -353,7 +359,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   reservedSize: 40,
                   getTitlesWidget: (value, meta) {
                     return Text(
-                      _currencyFormat.format(value).replaceAll('\$', ''),
+                      _formatCurrency(value), // تعديل هنا
                       style: TextStyle(
                         color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         fontSize: 10,
@@ -405,7 +411,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   reservedSize: 40,
                   getTitlesWidget: (value, meta) {
                     return Text(
-                      _currencyFormat.format(value).replaceAll('\$', ''),
+                      _formatCurrency(value), // تعديل هنا
                       style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontSize: 10),
                     );
                   },
@@ -440,7 +446,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ? cat.categoryNameAr
                         : cat.categoryNameEn;
                     return LineTooltipItem(
-                      '$name\n${_currencyFormat.format(touchedSpot.y)}',
+                      '$name\n\$${_formatCurrency(touchedSpot.y)}', // تعديل هنا
                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     );
                   }).toList();
@@ -514,7 +520,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Text(context.l10n.netSavings, style: const TextStyle(color: Colors.white, fontSize: 16)),
           const SizedBox(height: 8),
           Text(
-            _currencyFormat.format(netSavings),
+            '\$${_formatCurrency(netSavings)}', // تعديل هنا
             style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800),
           ),
         ],
@@ -550,7 +556,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(width: 12),
               Expanded(child: Text(name, style: TextStyle(color: isDarkMode ? Colors.white : Colors.black))),
               Text(
-                _currencyFormat.format(cat.total),
+                '\$${_formatCurrency(cat.total)}', // تعديل هنا
                 style: TextStyle(
                   color: isIncome ? Colors.green[800] : Colors.red[800],
                   fontWeight: FontWeight.w700,

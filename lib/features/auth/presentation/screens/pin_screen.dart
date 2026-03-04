@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:my_wallet/core/extensions/context_extensions.dart';
 import 'package:my_wallet/core/services/biometric_service.dart';
+import 'package:my_wallet/core/services/message_service.dart';
 import 'package:my_wallet/core/utils/shared_prefs.dart';
 import 'package:my_wallet/features/auth/presentation/widgets/biometric_bottom_sheet.dart';
 import 'package:my_wallet/features/home/presentation/screens/HomeScreen.dart';
@@ -85,13 +86,8 @@ class _PinScreenState extends State<PinScreen>
       _navigateToHome();
     } else {
       setState(() => _biometricFailed = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${_biometricName} ${context.l10n.failed}'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      // استخدام MessageService بدلاً من SnackBar
+      MessageService.showWarning('${_biometricName} ${context.l10n.failed}');
     }
   }
 
@@ -195,6 +191,7 @@ class _PinScreenState extends State<PinScreen>
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
