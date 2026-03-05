@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:my_wallet/core/services/hide_balance_service.dart';
 import 'package:my_wallet/core/services/message_service.dart';
+import 'package:my_wallet/core/utils/api_error_handler.dart';
 import 'package:my_wallet/features/home/presentation/screens/TransactionsPage.dart';
 import 'package:my_wallet/features/wallet/data/models/category_model.dart';
 import 'package:my_wallet/features/wallet/data/presentation/screens/analytics_screen.dart';
@@ -31,9 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      body: PageView(
+  backgroundColor: isDarkMode ? Colors.black : Colors.white,
+  extendBody: true,
+  body: Stack(
+    children: [
+      PageView(
         controller: _pageController,
         onPageChanged: (index) {
           setState(() {
@@ -47,80 +54,133 @@ class _HomeScreenState extends State<HomeScreen> {
           const BudgetPage(),
         ],
       ),
-      bottomNavigationBar: Container(
-        height: 70,
+
+      /// 👇 ده البار العايم
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: _buildFloatingNav(isDarkMode),
+        ),
+      ),
+    ],
+  ),
+);
+  }
+Widget _buildFloatingNav(bool isDarkMode) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(35), // قللنا الحواف
+    child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.85,
+        height: 75, // قللنا الارتفاع
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.black : Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-              width: 1,
-            ),
+          color: isDarkMode
+              ? Colors.black.withOpacity(0.5)
+              : Colors.white.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(35),
+          border: Border.all(
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.15)
+                : Colors.white.withOpacity(0.5),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15), // خففنا الظل
+              blurRadius: 15,
+              offset: const Offset(0, 5), // قللنا المسافة
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(
-                0, Icons.home_outlined, Icons.home_filled, isDarkMode),
-            _buildNavItem(
-                1, Icons.pie_chart_outline, Icons.pie_chart, isDarkMode),
-            _buildNavItem(2, Icons.receipt_long_outlined, Icons.receipt_long,
-                isDarkMode),
-            _buildNavItem(3, Icons.account_balance_wallet_outlined,
-                Icons.account_balance_wallet, isDarkMode),
-          ],
+_buildNavItem(0, FontAwesomeIcons.solidHouse, FontAwesomeIcons.solidHouse, isDarkMode),
+_buildNavItem(1, FontAwesomeIcons.chartSimple, FontAwesomeIcons.chartSimple, isDarkMode),
+_buildNavItem(2, FontAwesomeIcons.receipt, FontAwesomeIcons.receipt, isDarkMode),
+_buildNavItem(3, FontAwesomeIcons.wallet, FontAwesomeIcons.wallet, isDarkMode),
+  ],
         ),
       ),
-    );
+    ),
+  );
+}
+
+Widget _buildNavItem(
+    int index, IconData outlineIcon, IconData filledIcon, bool isDarkMode) {
+  final isSelected = _currentIndex == index;
+  final l10n = context.l10n;
+
+  String label;
+  switch (index) {
+    case 0:
+      label = l10n.home;
+      break;
+    case 1:
+      label = l10n.analytics;
+      break;
+    case 2:
+      label = l10n.transactions;
+      break;
+    case 3:
+      label = l10n.budget;
+      break;
+    default:
+      label = '';
   }
 
-  Widget _buildNavItem(
-      int index, IconData outlineIcon, IconData filledIcon, bool isDarkMode) {
-    final isSelected = _currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
-      child: Container(
-        width: 70,
-        height: 70,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDarkMode ? Colors.grey[900] : Colors.grey[100])
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
+  return GestureDetector(
+    onTap: () {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    },
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      width: 70,
+      height: 65, // قللنا الارتفاع
+      decoration: BoxDecoration(
+        color: isSelected
+            ? (isDarkMode
+                ? Colors.white.withOpacity(0.15)
+                : Colors.black.withOpacity(0.1))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedScale(
+            duration: const Duration(milliseconds: 250),
+            scale: isSelected ? 1.1 : 1.0, // قللنا التكبير
+            child: Icon(
               isSelected ? filledIcon : outlineIcon,
-              size: 24,
+              size: 26,
               color: isSelected
                   ? (isDarkMode ? Colors.white : Colors.black)
-                  : (isDarkMode ? Colors.grey[600] : Colors.grey[400]),
+                  : (isDarkMode ? Colors.white60 : Colors.black45),
             ),
-            if (isSelected)
-              Container(
-                width: 4,
-                height: 4,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2), // قللنا المسافة
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected
+                  ? (isDarkMode ? Colors.white : Colors.black)
+                  : (isDarkMode ? Colors.white60 : Colors.black45),
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class HomeTab extends StatefulWidget {
@@ -148,50 +208,58 @@ class _HomeTabState extends State<HomeTab> {
     _loadCategories();
   }
 
-  Future<void> _loadCategories() async {
-    setState(() => _isLoadingCategories = true);
-    try {
-      final repo = CategoryRepository();
-      _categories = await repo.getAllCategories();
-    } catch (e) {
-      debugPrint('Error loading categories: $e');
-      MessageService.showError('Failed to load categories: $e');
-    } finally {
-      setState(() => _isLoadingCategories = false);
-    }
+Future<void> _loadCategories() async {
+  setState(() => _isLoadingCategories = true);
+  try {
+    final repo = CategoryRepository();
+    _categories = await repo.getAllCategories();
+  } catch (e) {
+    final errorMsg = ApiErrorHandler.getErrorMessage(e);
+    debugPrint('Error loading categories: $errorMsg');
+    MessageService.showError('فشل تحميل الفئات: $errorMsg');
+  } finally {
+    setState(() => _isLoadingCategories = false);
   }
+}
 
-  Future<List<WalletTransaction>> _loadAllTransactions() async {
-    try {
-      final response = await _walletRepository.getTransactions(pageSize: 100);
-      return response.transactions;
-    } catch (e) {
-      MessageService.showError('Failed to load transactions: $e');
-      return [];
-    }
+Future<List<WalletTransaction>> _loadAllTransactions() async {
+  try {
+    final response = await _walletRepository.getTransactions(pageSize: 100);
+    return response.transactions;
+  } catch (e) {
+    final errorMsg = ApiErrorHandler.getErrorMessage(e);
+    MessageService.showError('فشل تحميل المعاملات: $errorMsg');
+    return [];
   }
+}
 
-  Future<void> _loadHomeData() async {
+Future<void> _loadHomeData() async {
+  setState(() {
+    _isLoading = true;
+    _errorMessage = null;
+  });
+
+  try {
+    final data = await _walletRepository.getHomeData();
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _homeData = data;
     });
-
-    try {
-      final data = await _walletRepository.getHomeData();
-      setState(() {
-        _homeData = data;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = context.l10n.errorLoadingData(e.toString());
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+  } catch (e) {
+    final errorMsg = ApiErrorHandler.getErrorMessage(e);
+    setState(() {
+      _errorMessage = errorMsg;
+    });
+    
+    // إذا لم يكن خطأ اتصال، نعرضه أيضاً في SnackBar
+    if (!ApiErrorHandler.isNetworkError(e)) {
+      MessageService.showError(errorMsg);
     }
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   Future<void> _refreshData() async {
     await _loadHomeData();
@@ -1804,33 +1872,64 @@ _buildBlurrableNumber(
     );
   }
 
-  Widget _buildErrorWidget(bool isDarkMode) {
-    return Padding(
+Widget _buildErrorWidget(bool isDarkMode) {
+  return Center(
+    child: Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.error_outline_rounded,
+              size: 80,
+              color: Colors.red.shade400,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          Text(
+            'عذراً، حدث خطأ',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             _errorMessage!,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+              fontSize: 15,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
+          const SizedBox(height: 28),
+          ElevatedButton.icon(
             onPressed: _loadHomeData,
-            child: Text(context.l10n.tryAgain),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('إعادة المحاولة'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+              foregroundColor: isDarkMode ? Colors.white : Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildQuickAction(
     IconData icon,
