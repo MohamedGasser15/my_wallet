@@ -30,6 +30,20 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>We need Face ID to authenticate you and access your wallet</string>
+
+	<!-- ✅ Microphone Permission -->
+<key>NSMicrophoneUsageDescription</key>
+<string>This app uses the microphone so you can record expenses with your voice.</string>
+
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>This app uses speech recognition to convert your voice into expense entries.</string>
+
+	<!-- ✅ Background Audio (مطلوب لو الـ app راح background وهو بيسجل) -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
